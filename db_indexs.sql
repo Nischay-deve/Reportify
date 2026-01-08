@@ -1,0 +1,15 @@
+ALTER TABLE `modules` ADD INDEX `team_id` (`team_id`);
+ALTER TABLE `chapters` ADD INDEX `module_id` (`module_id`);
+ALTER TABLE `team_users` ADD INDEX `team_id` (`team_id`);
+ALTER TABLE `users` ADD INDEX `deleted_at` (`deleted_at`);
+ALTER TABLE `reports` ADD INDEX `link_is_deleted` (`link`, `is_deleted`);
+ALTER TABLE `reports` ADD INDEX `team_id` (`team_id`);
+ALTER TABLE `reports` ADD  INDEX `source_is_deleted` (`source`, `is_deleted`, `deleted_at`);
+ALTER TABLE `report_keypoints` ADD INDEX `report_id` (`report_id`);
+ALTER TABLE `report_videolinks` ADD INDEX `report_id` (`report_id`);
+ALTER TABLE `reports` ADD INDEX `is_del_team_id` (`is_deleted`, `team_id`);
+ALTER TABLE `reports` ADD INDEX `chap_is_del_del_at` (`chapter_id`, `is_deleted`, `deleted_at`);
+ALTER TABLE `reports` ADD INDEX `is_del_team_mod_del` (`is_deleted`, `team_id`, `module_id`, `deleted_at`);
+ALTER TABLE `report_imagelinks` ADD INDEX `report_id` (`report_id`);
+ALTER TABLE `report_screenshots` ADD INDEX `report_id` (`report_id`);
+ALTER TABLE `report_featuredimages` ADD INDEX `report_id` (`report_id`);

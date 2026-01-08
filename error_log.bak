@@ -1,0 +1,8 @@
+[20-Oct-2021 14:06:57 UTC] PHP Warning:  Uncaught ErrorException: require_once(bootstrap.php): failed to open stream: No such file or directory in /home/pmsecures2/public_html/research/app/Http/Controllers/Admin/ReportController.php:1926
+Stack trace:
+#0 /home/pmsecures2/public_html/research/app/Http/Controllers/Admin/ReportController.php(1926): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(2, 'require_once(bo...', '/home/pmsecures...', 1926, Array)
+#1 /home/pmsecures2/public_html/research/app/Http/Controllers/Admin/ReportController.php(1926): require_once()
+#2 /home/pmsecures2/public_html/research/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\Http\Controllers\Admin\ReportController->pdfview(Object(Illuminate\Http\Request))
+#3 /home/pmsecures2/public_html/research/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(45): Illuminate\Routing\Controller->callAction('pdfview', Array)
+#4 /home/pmsecures2/public_html/research/vendor/laravel/framework/src/Illuminate/Routing/Route.php(254): Illumi in /home/pmsecures2/public_html/research/app/Http/Controllers/Admin/ReportController.php on line 1926
+[20-Oct-2021 14:06:57 UTC] PHP Fatal error:  App\Http\Controllers\Admin\ReportController::pdfview(): Failed opening required 'bootstrap.php' (include_path='.:/opt/cpanel/ea-php73/root/usr/share/pear') in /home/pmsecures2/public_html/research/app/Http/Controllers/Admin/ReportController.php on line 1926
