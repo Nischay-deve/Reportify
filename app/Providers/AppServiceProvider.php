@@ -41,7 +41,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         // $newEnvPath = 'E:/xampp-8/htdocs/teamwork/thisdatethatyear2/config';
-        $newEnvPath = 'C:/xampp/env_files/repotify';
+        $newEnvPath = '/var/www/vhosts/env_files/reportify';
+       
         $dotenv = Dotenv::createImmutable($newEnvPath);
         $dotenv->load();
 

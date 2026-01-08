@@ -18,7 +18,7 @@ $app = new Illuminate\Foundation\Application(
 // Add this line to set a custom .env location
 // $app->useEnvironmentPath('E:/xampp-8/htdocs/teamwork/thisdatethatyear2/config');
 
-$app->useEnvironmentPath('C:/xampp/env_files/repotify');
+$app->useEnvironmentPath('/var/www/vhosts/env_files/reportify');
 
 /*
 |--------------------------------------------------------------------------
