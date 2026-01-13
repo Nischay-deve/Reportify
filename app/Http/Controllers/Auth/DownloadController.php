@@ -2949,6 +2949,7 @@ tr { page-break-inside: avoid; }
             exit();
         } else {
             if ($reportType == "word") {
+
                 ///////////////////////////////
                 /// Below is to create WORD
                 ///////////////////////////////
@@ -3370,23 +3371,63 @@ tr { page-break-inside: avoid; }
                 }
             } else {
 
-                ///////////////////////////////
-                /// Below is to create PDF
-                ///////////////////////////////
-                // dd($teamNews);
-                //new code on Oct 30
-                $view_content_mpdfview = View::make('report.mpdfview_allteam', $reportParams)->render();
+                // prevent pcre crash on large reports
+                @ini_set('pcre.backtrack_limit', '5000000');
+                @ini_set('pcre.recursion_limit', '500000');
 
-                //echo "<pre>";print_r($view_content_mpdfview);exit;
+                $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+                $fontDirs = $defaultConfig['fontDir'];
 
-                // $mpdf = new \Mpdf\Mpdf();
-                // $mpdf->WriteHTML($view_content_mpdfview);
+                $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+                $fontData = $defaultFontConfig['fontdata'];
 
-                // $fileName = $downloadFileName . '.pdf';
-                // return $mpdf->Output($fileName, 'D');
+                $mpdf = new \Mpdf\Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
 
-                $mpdf = new \Mpdf\Mpdf();
-                $mpdf->WriteHTML($view_content_mpdfview);
+                    'margin_left'   => 20,
+                    'margin_right'  => 20,
+                    'margin_top'    => 20,
+                    'margin_bottom' => 20,
+
+                    // ✅ your actual TTF folder
+                    'fontDir' => array_merge($fontDirs, [
+                        base_path('public/fonts/Hind'),
+                    ]),
+
+                    // ✅ register Hind font
+                    'fontdata' => $fontData + [
+                        'hind' => [
+                            'R' => 'Hind-Regular.ttf',
+                            'B' => 'Hind-Bold.ttf',
+                        ],
+                    ],
+
+                    // ✅ force default font to Hind (Hindi supported)
+                    'default_font' => 'hind',
+
+                    // ✅ helps mixed English + Hindi
+                    'autoScriptToLang' => true,
+                    'autoLangToFont'   => true,
+                    'useSubstitutions' => true,
+                ]);
+
+                $mpdf->SetAutoPageBreak(true, 20);
+
+                // 1) header + index
+                $mpdf->WriteHTML(View::make('report.mpdf_allteam_header', $reportParams)->render());
+
+                // 2) each news item as chunk (avoids pcre.backtrack_limit crash)
+                foreach ($reportParams['keyNews'] as $reports) {
+                    $mpdf->WriteHTML(
+                        View::make('report.mpdf_allteam_item', array_merge($reportParams, [
+                            'reports' => $reports
+                        ]))->render()
+                    );
+                }
+
+                // 3) footer
+                $mpdf->WriteHTML(View::make('report.mpdf_allteam_footer', $reportParams)->render());
 
                 $fileName = $downloadFileName . '.pdf';
                 $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
