@@ -5,6 +5,7 @@
 $paginationLinks = "";
 if($keyNews && $mode == "view"){
 $paginationLinks = $keyNews->links()->render();
+
 }
 
 @endphp
@@ -558,11 +559,11 @@ $paginationLinks = $keyNews->links()->render();
 
                                                                             {{-- FIR LINK --}}
 
-                                                                            
+
                                                                             @if ($firLink)
-                                                                            
+
                                                                             <a href="{{ $firLink }}" target="_blank">
-                                                                                <i class="fas fa-link mr-1"></i> FIR Link 
+                                                                                <i class="fas fa-link mr-1"></i> FIR Link
                                                                             </a>
                                                                             <span>|</span>
                                                                             @endif
@@ -604,6 +605,27 @@ $paginationLinks = $keyNews->links()->render();
                                                                         </a> |
                                                                         @endforeach
                                                                         @endif
+
+                                                                        {{-- IMAGE SOURCE LINKS (AFTER VIDEOS, NOT INSIDE VIDEO LOOP) --}}
+                                                                        @if (!empty($reports['imagelink']) && count($reports['imagelink']) > 0)
+                                                                        @foreach ($reports['imagelink'] as $key => $image)
+                                                                        @if (!empty($image['imagelink']))
+                                                                        @php
+                                                                        $imageUrl = str_starts_with($image['imagelink'], 'http')
+                                                                        ? $image['imagelink']
+                                                                        : 'https://' . $image['imagelink'];
+                                                                        @endphp
+
+                                                                        <a href="{{ $imageUrl }}" target="_blank">
+                                                                            <i class="fas fa-image mr-2"></i>
+                                                                            Image Source {{ $key + 1 }}
+                                                                        </a>
+                                                                        |
+                                                                        @endif
+                                                                        @endforeach
+                                                                        @endif
+
+
 
 
 
