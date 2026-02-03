@@ -4744,66 +4744,80 @@ tr { page-break-inside: avoid; }
         // dd($request->all());
 
         $showReportForUser = "";
-        // if ($roleId == config('app.basic_user_role_id')) {
-        //     $user = auth()->user();
-        //     $showReportForUser = $user->id;
-        // } else {
-        //     if ($request->from_user) {
-        //         $showReportForUser = $request->from_user;
-        //     }
-        // }
 
-        $module_ids_arr = array();
-        if ($request->module) {
-            $module_ids_arr = $request->module;
-        }
-        // dd($module_ids_arr);
-
-        $chapter_ids_arr = array();
-        if ($request->chapter_id) {
-            $chapter_ids_arr = $request->chapter_id;
-        }
-        // dd($chapter_ids_arr);
-
-        $tName = $request->team_name;
-
-        $download_file_name = $request->download_file_name;
-        $download_file_title = $request->download_file_title;
-        $download_file_heading = $request->download_file_heading;
-
-        $report_data_type = $request->report_data_type;
-        // $language_id = $request->language_id;
-
-        $language_id = array();
-        if ($request->language_id) {
-            $language_id = $request->language_id;
+        // Modules (multi)
+        $module_ids_arr = [];
+        if (!empty($request->module)) {
+            $module_ids_arr = (array) $request->module;
         }
 
+        // Chapters (multi)
+        $chapter_ids_arr = [];
+        if (!empty($request->chapter_id)) {
+            $chapter_ids_arr = (array) $request->chapter_id;
+        }
 
-        $location_id = array();
-        if ($request->location_id) {
-            $location_id = $request->location_id;
+        /**
+         * ✅ TEAM (multi-select)
+         * When using name="team_name[]", this will be an array.
+         */
+        $teamIds = [];
+        if (!empty($request->team_name)) {
+            $teamIds = (array) $request->team_name;
+            // remove empty values just in case
+            $teamIds = array_values(array_filter($teamIds, fn($v) => $v !== null && $v !== ''));
+        }
+
+        $download_file_name = $request->download_file_name ?? null;
+        $download_file_title = $request->download_file_title ?? null;
+        $download_file_heading = $request->download_file_heading ?? null;
+
+        $report_data_type = $request->report_data_type ?? "work_report";
+
+        // Language (multi)
+        $language_id = [];
+        if (!empty($request->language_id)) {
+            $language_id = (array) $request->language_id;
+        }
+
+        // Location (multi)
+        $location_id = [];
+        if (!empty($request->location_id)) {
+            $location_id = (array) $request->location_id;
         }
 
         $fir_documents = 0;
-        if ($request->fir_documents) {
+        if (!empty($request->fir_documents)) {
             $fir_documents = $request->fir_documents;
         }
 
-        $teamName = Team::select('name')->where('id', $tName)->where('active', 1)->first();
-        // $moduleName = Module::select('name')->where('id', $module)->where('active', 1)->first();
-        // $chapterName = Chapter::select('name')->where('id', $chapter_id)->where('active', 1)->first();
+        // ✅ Get selected team names (for heading/filename)
+        $selectedTeamNames = collect();
+        if (count($teamIds) > 0) {
+            $selectedTeamNames = Team::whereIn('id', $teamIds)
+                ->where('active', 1)
+                ->pluck('name');
+        }
+
+        // ✅ Keep old variable name used in views, but make it safe for ALL / MULTI
+        // Some blades might do: $teamName->name
+        $teamNameText = "All Teams";
+        if ($selectedTeamNames->count() === 1) {
+            $teamNameText = $selectedTeamNames->first();
+        } elseif ($selectedTeamNames->count() > 1) {
+            $teamNameText = $selectedTeamNames->implode(', ');
+        }
+        $teamName = (object) ['name' => $teamNameText];
+
         $moduleName = "";
         $chapterName = "";
 
         $allTeams = Team::select('id', 'name')->where('active', 1)->get();
 
-        $report_data_type = "work_report";
-        if (!empty($request->report_data_type)) {
-            $report_data_type = $request->report_data_type;
-        }
-
-        $reportTitle = "Team 3 Work Report";
+        // ✅ Better dynamic title
+        $reportTitle = ($selectedTeamNames->count() === 1)
+            ? ($selectedTeamNames->first() . " Work Report")
+            : "Work Report";
 
         if (!empty($from && $to)) {
             $from = $from . " 00:00:00";
@@ -4822,9 +4836,9 @@ tr { page-break-inside: avoid; }
             'teams.name as team_name',
             'users.id AS user_id',
             'users.name as user_name',
-            DB::Raw('COUNT(reports.id) AS total_reports_by_team_user'),
-            DB::Raw('SUM(IF(DATE(reports.`created_at`) = reports.`publish_at`, 1, 0)) AS daily_report_count'),
-            DB::Raw('SUM(IF(DATE(reports.`created_at`) != reports.`publish_at`, 1, 0)) AS base_report_count')
+            DB::raw('COUNT(reports.id) AS total_reports_by_team_user'),
+            DB::raw('SUM(IF(DATE(reports.`created_at`) = reports.`publish_at`, 1, 0)) AS daily_report_count'),
+            DB::raw('SUM(IF(DATE(reports.`created_at`) != reports.`publish_at`, 1, 0)) AS base_report_count')
         )
             ->join('reports', 'reports.team_id', 'teams.id')
             ->join('users', 'users.id', 'reports.user_id')
@@ -4833,16 +4847,11 @@ tr { page-break-inside: avoid; }
             ->where('reports.sm_calendar_master_id', 0)
             ->where('teams.active', 1);
 
-
-        // echo "<BR>".$from;
-        // echo "<BR>".$to;
-
-
-        $firDocumentReportIdArr = array();
+        $firDocumentReportIdArr = [];
         if ($fir_documents == 1) {
             $firDocumentReportIdArr = $this->getFirDocumentReportIds();
             if (count($firDocumentReportIdArr) > 0) {
-                $workReport = $workReport->wherein('reports.id', $firDocumentReportIdArr);
+                $workReport = $workReport->whereIn('reports.id', $firDocumentReportIdArr);
             }
         }
 
@@ -4850,20 +4859,17 @@ tr { page-break-inside: avoid; }
             $workReport = $workReport->whereBetween($dateRangeAttribute, [$from, $to]);
         }
 
-        if (!empty($tName)) {
-            $workReport = $workReport->where('reports.team_id', $tName);
+        // ✅ TEAM FILTER (multi)
+        if (count($teamIds) > 0) {
+            $workReport = $workReport->whereIn('reports.team_id', $teamIds);
         }
 
-        // if (!empty($language_id)) {
-        //     $workReport = $workReport->where('reports.language_id', $language_id);
-        // }
-
         if (count($language_id) > 0) {
-            $workReport = $workReport->wherein('reports.language_id', $language_id);
+            $workReport = $workReport->whereIn('reports.language_id', $language_id);
         }
 
         if (count($location_id) > 0) {
-            $workReport = $workReport->wherein('reports.location_id', $location_id);
+            $workReport = $workReport->whereIn('reports.location_id', $location_id);
         }
 
         if (!empty($allLocationIds)) {
@@ -4871,56 +4877,37 @@ tr { page-break-inside: avoid; }
             $workReport = $workReport->whereIn('reports.location_id', $locationIdsArr);
         }
 
-        // if (!empty($module)) {
-        //     $workReport = $workReport->where('reports.module_id', $module);
-        // }
-
-        // if (!empty($chapter_id)) {
-        //     $workReport = $workReport->where('reports.chapter_id', $chapter_id);
-        // }
-
         if (count($module_ids_arr) > 0) {
-            $workReport = $workReport->wherein('reports.module_id', $module_ids_arr);
+            $workReport = $workReport->whereIn('reports.module_id', $module_ids_arr);
         }
+
         if (count($chapter_ids_arr) > 0) {
-            $workReport = $workReport->wherein('reports.chapter_id', $chapter_ids_arr);
+            $workReport = $workReport->whereIn('reports.chapter_id', $chapter_ids_arr);
         }
 
         if (!empty($showReportForUser)) {
             $workReport = $workReport->where('user_id', $showReportForUser);
         }
 
-        $workReport = $workReport->groupby('teams.id', 'users.id');
-        // $workReport = $workReport->toSql();
-        // dd($workReport);
-        //         $sql = $workReport->toSql();
-        // $bindings = $workReport->getBindings();
-
-        // $fullSql = vsprintf(str_replace('?', "'%s'", $sql), $bindings);
-
-        // dd($fullSql);
-
-        $workReport = $workReport->get();
-        // dd($workReport);
+        $workReport = $workReport->groupBy('teams.id', 'users.id')->get();
 
         if ($mode == "getcount") {
-            $workReport = $workReport->toArray();
-            $repcount = count($workReport);
-            return $repcount;
+            return count($workReport->toArray());
         }
 
         $mytime = Carbon\Carbon::now();
 
+        // ✅ Filename part based on single/multiple/all
         $team_name_converted = "_work_report";
-        if (!empty($tName)) {
-            $team_name_converted = str_replace(" ", "_", $teamName->name);
-            $team_name_converted = "_" . strtolower($team_name_converted);
+        if ($selectedTeamNames->count() === 1) {
+            $team_name_converted = "_" . strtolower(str_replace(" ", "_", $selectedTeamNames->first()));
+        } elseif ($selectedTeamNames->count() > 1) {
+            $team_name_converted = "_multiple_teams";
         }
 
         if (!empty($download_file_name)) {
             $downloadFileName = $download_file_name;
         } else {
-
             $downloadFileName = date('jSF') . $team_name_converted;
         }
 
@@ -4933,107 +4920,74 @@ tr { page-break-inside: avoid; }
             'mytime' => $mytime,
             'reportType' => $reportType,
             'moduleName' => $moduleName,
-            'teamName' => $teamName,
+            'teamName' => $teamName, // safe object with name
             'chapterName' => $chapterName,
             'reportTitle' => $reportTitle,
             'reportDescription' => $download_file_title,
             'reportHeading' => $download_file_heading
         ];
 
-        // dd($reportParams);
-        // dd($mode);
-
-
         if ($mode == "view") {
-
-            $view_content_web =  view('report.webview_work_report',  $reportParams)->render();
-            echo $view_content_web;
+            echo view('report.webview_work_report', $reportParams)->render();
             exit();
-        } else {
-
-            if ($reportType == "word") {
-                ///////////////////////////////
-                /// Below is to create WORD
-                ///////////////////////////////
-
-                $view_content_word = View::make('report.wordview_work_report', $reportParams)->render();
-
-                $view_content_word = str_replace("&amp;", "and", $view_content_word);
-
-                //added on Dec 13 for issue of #039 error '
-                $view_content_word = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $view_content_word);
-
-                // echo "<pre>";print_r($view_content_word);exit;
-
-                $phpWord = new \PhpOffice\PhpWord\PhpWord();
-
-                // Its working without this also still can keep it.
-                $phpWord->setDefaultFontName('Hind');
-                $phpWord->setDefaultFontSize(11);
-
-                \PhpOffice\PhpWord\Shared\Html::addHtml($phpWord->addSection(), $view_content_word, true);
-
-                $fileName = $downloadFileName . '.docx';
-
-                $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-                try {
-                    $objWriter->save(storage_path(config('app.download_report_base_folder') . "/" . $fileName));
-                } catch (Exception $e) {
-                }
-
-                // return response()->download(storage_path(config('app.download_report_base_folder')."/".$fileName));
-                return $fileName;
-            } elseif ($reportType == "googledoc") {
-                ///////////////////////////////
-                /// Below is to create WORD
-                ///////////////////////////////
-
-                $view_contents_googledoc = View::make('report.googledoc_work_report', $reportParams)->render();
-
-                $view_contents_googledoc = str_replace("&amp;", "and", $view_contents_googledoc);
-
-                //added on Dec 13 for issue of #039 error '
-                $view_contents_googledoc = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $view_contents_googledoc);
-
-                // echo "<pre>";print_r($view_contents_googledoc);exit;
-
-                $phpWord = new \PhpOffice\PhpWord\PhpWord();
-
-                // Its working without this also still can keep it.
-                $phpWord->setDefaultFontName('Hind');
-                $phpWord->setDefaultFontSize(11);
-
-                \PhpOffice\PhpWord\Shared\Html::addHtml($phpWord->addSection(), $view_contents_googledoc, true);
-
-                $fileName = $downloadFileName . '.docx';
-
-                $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-                try {
-                    $objWriter->save(storage_path(config('app.download_report_base_folder') . "/" . $fileName));
-                } catch (Exception $e) {
-                }
-
-                return $fileName;
-            } else {
-
-                // dd($reportParams);
-                ///////////////////////////////
-                /// Below is to create PDF
-                ///////////////////////////////
-
-                //new code on Oct 30
-                $view_content_mpdfview = View::make('report.mpdfview_work_report', $reportParams)->render();
-
-                $mpdf = new \Mpdf\Mpdf();
-                $mpdf->WriteHTML($view_content_mpdfview);
-
-                // echo "<pre>";print_r($view_content_mpdfview);exit;
-
-                $fileName = $downloadFileName . '.pdf';
-                $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
-                return $fileName;
-            }
         }
+
+        // WORD
+        if ($reportType == "word") {
+            $view_content_word = View::make('report.wordview_work_report', $reportParams)->render();
+            $view_content_word = str_replace("&amp;", "and", $view_content_word);
+            $view_content_word = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $view_content_word);
+
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $phpWord->setDefaultFontName('Hind');
+            $phpWord->setDefaultFontSize(11);
+
+            \PhpOffice\PhpWord\Shared\Html::addHtml($phpWord->addSection(), $view_content_word, true);
+
+            $fileName = $downloadFileName . '.docx';
+            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+
+            try {
+                $objWriter->save(storage_path(config('app.download_report_base_folder') . "/" . $fileName));
+            } catch (Exception $e) {
+            }
+
+            return $fileName;
+        }
+
+        // GOOGLE DOC (same as word)
+        if ($reportType == "googledoc") {
+            $view_contents_googledoc = View::make('report.googledoc_work_report', $reportParams)->render();
+            $view_contents_googledoc = str_replace("&amp;", "and", $view_contents_googledoc);
+            $view_contents_googledoc = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $view_contents_googledoc);
+
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $phpWord->setDefaultFontName('Hind');
+            $phpWord->setDefaultFontSize(11);
+
+            \PhpOffice\PhpWord\Shared\Html::addHtml($phpWord->addSection(), $view_contents_googledoc, true);
+
+            $fileName = $downloadFileName . '.docx';
+            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+
+            try {
+                $objWriter->save(storage_path(config('app.download_report_base_folder') . "/" . $fileName));
+            } catch (Exception $e) {
+            }
+
+            return $fileName;
+        }
+
+        // PDF
+        $view_content_mpdfview = View::make('report.mpdfview_work_report', $reportParams)->render();
+
+        $mpdf = new \Mpdf\Mpdf();
+        $mpdf->WriteHTML($view_content_mpdfview);
+
+        $fileName = $downloadFileName . '.pdf';
+        $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
+
+        return $fileName;
     }
 
     // hashtag_report
