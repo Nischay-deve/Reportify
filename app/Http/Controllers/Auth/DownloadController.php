@@ -2942,6 +2942,29 @@ tr { page-break-inside: avoid; }
 
         // dd($reportParams);        
 
+        // $news = $reportParams['keyNews']; // your paginator
+
+        // dd([
+        //     'type' => get_class($news),
+        //     'meta' => method_exists($news, 'total') ? [
+        //         'current_page' => $news->currentPage(),
+        //         'per_page'     => $news->perPage(),
+        //         'total'        => $news->total(),
+        //         'last_page'    => $news->lastPage(),
+        //     ] : null,
+
+        //     'first_report_attributes' => optional($news->first())->getAttributes(),
+
+        //     'first_report_relations' => [
+        //         'videolink_first_row' => optional(optional($news->first())->videolink?->first())->toArray(),
+        //         'videolink_all'       => optional($news->first())->videolink?->toArray(),
+
+        //         'imagelink_first_row' => optional(optional($news->first())->imagelink?->first())->toArray(),
+        //         'imagelink_all'       => optional($news->first())->imagelink?->toArray(),
+        //         'documnet' => optional($news->first())->document_fir_link_1?->toArray(),
+        //     ],
+        // ]);
+
         if ($mode == "view") {
 
             $view_content_web =  view('report.webview_allteam',  $reportParams)->render();

@@ -559,7 +559,7 @@
                                                                             @endif
                                                                         @endif
 
-                                                                        @if ($reports['link'])
+                                                                         @if ($reports['link'])
                                                                             &nbsp; <span
                                                                                 class="tag__item play {{ $publicReportColor }}">
                                                                                 <a href="{{ $reports['link'] }}"
@@ -568,10 +568,144 @@
                                                                                     {{ ucwords($reports['source']) }}</a>
                                                                             </span>
                                                                         @endif
+                                                                             |
+                                                                        
+                                                                        @if ($reports->videolink && $reports->videolink->count())
+    @foreach ($reports->videolink as $k => $v)
+        @php
+            $url = $v->videolink ?? '';
+            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                $url = 'https://' . $url;
+            }
+        @endphp
+
+        @if ($url)
+            &nbsp; <span class="tag__item play {{ $publicReportColor }}">
+                <a href="{{ $url }}" target="_blank" rel="noopener">
+                    <i class="fas fa-video mr-2"></i> Video {{ $k + 1 }}
+                </a>
+            </span>
+        @endif
+    @endforeach
+@endif
+     |
+
+@if ($reports->imagelink && $reports->imagelink->count())
+    @foreach ($reports->imagelink as $k => $img)
+        @php
+            $url = $img->imagelink ?? '';
+            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                $url = 'https://' . $url;
+            }
+        @endphp
+
+        @if ($url)
+            &nbsp; <span class="tag__item play {{ $publicReportColor }}">
+                <a href="{{ $url }}" target="_blank" rel="noopener">
+                    <i class="fas fa-image mr-2"></i> Image Source {{ $k + 1 }}
+                </a>
+            </span>
+        @endif
+    @endforeach
+@endif 
+
+
+{{-- ===================== DOCUMENTS (FIR + GENERAL) ===================== --}}
+@if ($reports->document && $reports->document->count() > 0)
+
+    @php
+        $firLink  = null;
+        $firFile  = null; // (image/pdf/file)
+        $docLink  = null;
+        $docFile  = null;
+
+        foreach ($reports->document as $doc) {
+
+            $type = $doc->document_type ?? null;
+
+            // FIR
+            if ($type === 'fir_copy') {
+                if (!empty($doc->document_link) && !$firLink) {
+                    $firLink = str_starts_with($doc->document_link, 'http')
+                        ? $doc->document_link
+                        : 'https://' . $doc->document_link;
+                }
+
+                if (!empty($doc->document) && !$firFile) {
+                    // if document is stored as uploads path, use Helper::getImageUrl if you have it
+                    $firFile = str_starts_with($doc->document, 'http')
+                        ? $doc->document
+                        : Helper::getImageUrl($doc->document); // OR: asset($doc->document)
+                }
+            }
+
+            // GENERAL DOCUMENT
+            if ($type === 'general') {
+                if (!empty($doc->document_link) && !$docLink) {
+                    $docLink = str_starts_with($doc->document_link, 'http')
+                        ? $doc->document_link
+                        : 'https://' . $doc->document_link;
+                }
+
+                if (!empty($doc->document) && !$docFile) {
+                    $docFile = str_starts_with($doc->document, 'http')
+                        ? $doc->document
+                        : Helper::getImageUrl($doc->document); // OR: asset($doc->document)
+                }
+            }
+        }
+    @endphp
+
+         |
+
+    {{-- FIR LINK --}}
+    @if ($firLink)
+        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
+            <a href="{{ $firLink }}" target="_blank" rel="noopener">
+                <i class="fas fa-link mr-2"></i> FIR Link
+            </a>
+        </span>
+    @endif
+
+    {{-- FIR FILE --}}
+    @if ($firFile)
+        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
+            <a href="{{ $firFile }}" target="_blank" rel="noopener">
+                <i class="fas fa-file mr-2"></i> FIR File
+            </a>
+        </span>
+    @endif
+
+         |
+
+    {{-- DOCUMENT LINK --}}
+    @if ($docLink)
+        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
+            <a href="{{ $docLink }}" target="_blank" rel="noopener">
+                <i class="fas fa-link mr-2"></i> Document Link
+            </a>
+        </span>
+    @endif
+
+         |
+
+    {{-- DOCUMENT FILE --}}
+    @if ($docFile)
+        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
+            <a href="{{ $docFile }}" target="_blank" rel="noopener">
+                <i class="fas fa-file mr-2"></i> Document File
+            </a>
+        </span>
+    @endif
+
+@endif
+
+     |
+
 
 
                                                                         @if (count($reports['followup']) > 0)
-                                                                            <br>
+                                                                            
                                                                             @foreach ($reports['followup'] as $key => $followup)
                                                                                 <a href="{{ $followup['followup_link'] }}"
                                                                                     target="_blank">
