@@ -1421,7 +1421,7 @@ class DownloadController extends Controller
             'zihad' => $loveZihad,
         ];
 
-        // dd($reportParams);
+        // dd($reportParams['keyNews']);
 
         if ($mode == "view") {
 
