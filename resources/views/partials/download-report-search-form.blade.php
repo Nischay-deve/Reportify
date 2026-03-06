@@ -430,6 +430,18 @@ $domain = $app_domain . $website_slug . '/';
                                                         </label>
                                                     </div>
                                                 </div>
+
+                                                <div class="col-md-4">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input  mb-2 mr-3 fs-5" value="1"
+                                                            id="videolink" type="checkbox" name="videolink">
+
+                                                        <label class="form-check-label" for="video link">Video Links
+                                                            <br><span class="label fw-bold"
+                                                                id="video_link"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="row mb-3">
@@ -1175,6 +1187,7 @@ $domain = $app_domain . $website_slug . '/';
             // Reset counters
             $('#first_time_reports').empty();
             $('#followup_reports').empty();
+            $('#video_link').empty();
             $('#calendar_date_reports').empty();
             $('#fir_documents_reports').empty();
             $('#total_reports').empty();
@@ -1268,6 +1281,10 @@ $domain = $app_domain . $website_slug . '/';
                     }
                     if (result.followup_reports?.[0]) {
                         $("#followup_reports").text(result.followup_reports[0].total_reports);
+                    }
+
+                    if (result.videolink?.[0]) {
+                        $("#video_link").text(result.videolink[0].total_reports);
                     }
                     if (result.calendar_date_reports?.[0]) {
                         $("#calendar_date_reports").text(result.calendar_date_reports[0].total_reports);
@@ -1445,6 +1462,11 @@ $domain = $app_domain . $website_slug . '/';
                                 ' Reports)');
                         });
 
+                           $.each(result.videolink, function(key, value) {
+                            $("#video_link").html('(' + value.total_reports +
+                                ' Reports)');
+                        });
+
                         // calendar_date_reports
                         $.each(result.calendar_date_reports, function(key, value) {
                             $("#calendar_date_reports").html('(' + value
@@ -1562,6 +1584,12 @@ $domain = $app_domain . $website_slug . '/';
                                 ' Reports)');
                         });
 
+                        // For Video Link
+
+                        $.each(result.videolink, function(key, value) {
+                            $("#video_link").html('(' + value.total_reports +
+                                ' Reports)');
+                        });
                         // calendar_date_reports
                         $.each(result.calendar_date_reports, function(key, value) {
                             $("#calendar_date_reports").html('(' + value
