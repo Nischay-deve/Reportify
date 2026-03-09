@@ -1283,9 +1283,9 @@ $domain = $app_domain . $website_slug . '/';
                         $("#followup_reports").text(result.followup_reports[0].total_reports);
                     }
 
-                    if (result.videolink?.[0]) {
-                        $("#video_link").text(result.videolink[0].total_reports);
-                    }
+                    // if (result.videolink?.[0]) {
+                    //     $("#video_link").text(result.videolink[0].total_reports);
+                    // }
                     if (result.calendar_date_reports?.[0]) {
                         $("#calendar_date_reports").text(result.calendar_date_reports[0].total_reports);
                     }
@@ -1462,10 +1462,10 @@ $domain = $app_domain . $website_slug . '/';
                                 ' Reports)');
                         });
 
-                           $.each(result.videolink, function(key, value) {
-                            $("#video_link").html('(' + value.total_reports +
-                                ' Reports)');
-                        });
+                        //    $.each(result.videolink, function(key, value) {
+                        //     $("#video_link").html('(' + value.total_reports +
+                        //         ' Reports)');
+                        // });
 
                         // calendar_date_reports
                         $.each(result.calendar_date_reports, function(key, value) {
@@ -1586,10 +1586,10 @@ $domain = $app_domain . $website_slug . '/';
 
                         // For Video Link
 
-                        $.each(result.videolink, function(key, value) {
-                            $("#video_link").html('(' + value.total_reports +
-                                ' Reports)');
-                        });
+                        // $.each(result.videolink, function(key, value) {
+                        //     $("#video_link").html('(' + value.total_reports +
+                        //         ' Reports)');
+                        // });
                         // calendar_date_reports
                         $.each(result.calendar_date_reports, function(key, value) {
                             $("#calendar_date_reports").html('(' + value
