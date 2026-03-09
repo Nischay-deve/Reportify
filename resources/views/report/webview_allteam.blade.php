@@ -1,20 +1,20 @@
 @extends($viewLayout)
-@section('title', $reportTitle)
+@section('title',$reportTitle)
 
 @section('content')
 
     @include('report_public_css')
     <style>
-        @mobile .swiper {
-            height: 100%;
-            max-height: 550px;
-        }
-
-        .positionContainer {
-            position: absolute;
-            top: 65px;
-            width: 98%;
-        }
+        @mobile
+            .swiper {
+                height: 100%;
+                max-height: 550px;
+            }
+            .positionContainer {
+                position: absolute;
+                top: 65px;
+                width: 98%;
+            }
         @else
             .swiper {
                 width: 500px;
@@ -22,7 +22,6 @@
                 max-height: 550px;
                 max-width: 100%;
             }
-
             .positionContainer {
                 position: absolute;
                 top: 20px;
@@ -32,7 +31,7 @@
     </style>
 
     <input type="text" name="socialShareContent" id="socialShareContent" value=""
-        style="position:fixed;left:-999999px;top:-999999px;">
+           style="position:fixed;left:-999999px;top:-999999px;">
 
     <div class="page-content positionContainer">
 
@@ -45,30 +44,17 @@
             </div>
         </div>
 
-        <form action="{{ route('report.pdfview', $website_slug) }}" method="get" autocomplete="off"
-            id="find_more_downloadForm" target="_blank">
+        <form action="{{ route('report.pdfview', $website_slug) }}" method="get" autocomplete="off" id="find_more_downloadForm"
+              target="_blank">
             <input type="hidden" name="team_name[]" id="find_more_team_id" value="">
             <input type="hidden" name="module[]" id="find_more_module_id" value="">
             <input type="hidden" name="chapter_id[]" id="find_more_chapter_id" value="">
-            <input type="hidden" name="find_more[]" id="find_more" value="yes">
+            <input type="hidden" name="find_more" id="find_more" value="yes">
             @php
                 foreach ($_GET as $name => $value) {
-                    if (
-                        $name !== 'team_name' &&
-                        $name !== 'module[]' &&
-                        $name !== 'chapter[]' &&
-                        $name != 'from_date' &&
-                        $name != 'to_date' &&
-                        $name != 'from_user' &&
-                        $name != 'report_from'
-                    ) {
+                    if ($name !== 'team_name[]' && $name !== 'module[]' && $name !== 'chapter[]' && $name != 'from_date' && $name != 'to_date' && $name != 'from_user' && $name != 'report_from') {
                         if (is_array($value)) {
-                            // foreach($value as $key => $keyValue){
-                            //     $name = htmlspecialchars($name);
-                            //     $keyValue = htmlspecialchars($keyValue);
-                            //     echo '<input type="hidden" name="' . $name . '[]" value="' . $keyValue . '">';
-                            //     break;
-                            // }
+                            // ignore arrays here intentionally
                         } else {
                             $name = htmlspecialchars($name);
                             $value = htmlspecialchars($value);
@@ -79,22 +65,19 @@
             @endphp
         </form>
 
-
         <div class="container-fluid" id="page_content" style="display: none;">
 
-            <!-- Share Report -->
             <div class="row">
                 <div class="col-md-4"></div>
 
-                <div class="col-md-4  fixed-button-share">
+                <div class="col-md-4 fixed-button-share">
                     <button type="button" id="share_report" class="btn btn-{{ config('app.color_scheme') }}">
                         Share Report <i class="mdi mdi-share"></i>
                     </button>
                 </div>
 
                 <div class="col-md-4 fixed-button">
-                    <form action="{{ route('report.pdfview', $website_slug) }}" method="get" autocomplete="off"
-                        id="downloadForm">
+                    <form action="{{ route('report.pdfview', $website_slug) }}" method="get" autocomplete="off" id="downloadForm">
                         @php
                             foreach ($_GET as $name => $value) {
                                 if ($name !== 'view_reports') {
@@ -102,57 +85,36 @@
                                         foreach ($value as $key => $keyValue) {
                                             $name = htmlspecialchars($name);
                                             $keyValue = htmlspecialchars($keyValue);
-                                            echo '<input type="hidden" name="' .
-                                                $name .
-                                                '[]" value="' .
-                                                $keyValue .
-                                                '">';
+                                            echo '<input type="hidden" name="' . $name . '[]" value="' . $keyValue . '">';
                                         }
                                     } else {
                                         $name = htmlspecialchars($name);
                                         $value = htmlspecialchars($value);
-
-                                        if ($name == 'report_type') {
-                                            $divId = 'download_report_type';
-                                        } else {
-                                            $divId = $name;
-                                        }
-                                        echo '<input type="hidden" id="' .
-                                            $divId .
-                                            '" name="' .
-                                            $name .
-                                            '" value="' .
-                                            $value .
-                                            '">';
+                                        echo '<input type="hidden" id="' . $name . '" name="' . $name . '" value="' . $value . '">';
                                     }
                                 }
                             }
                         @endphp
 
-
                         <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
                             <div class="btn-group" role="group">
                                 <button id="btnGroupDrop1" type="button"
-                                    class="btn btn-{{ config('app.color_scheme') }} dropdown-toggle" data-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    Download Report<i class="mdi mdi-chevron-down"></i>
+                                        class="btn btn-{{ config('app.color_scheme') }} dropdown-toggle" data-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                    Download Report <i class="mdi mdi-chevron-down"></i>
                                 </button>
-                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                                    <a class="dropdown-item" href="#word"><i class="mdi mdi-download"></i> Download Word
-                                        Report</a>
-                                    <a class="dropdown-item" href="#pdf"><i class="mdi mdi-download"></i> Download Pdf
-                                        Report</a>
-                                    <a class="dropdown-item" href="#googledoc"><i class="mdi mdi-download"></i> Download
-                                        Google Doc Report</a>
-                                    <a class="dropdown-item" href="#excel"><i class="mdi mdi-download"></i> Download
-                                        Excel Report</a>
-                                        @if($calendar_date==1)
-                                        <a class="dropdown-item" href="#pdf_desc"><i class="mdi mdi-download"></i> Download PDF Description</a>
-                                        @endif
 
-                                        @if($zihad==1)
+                                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                                    <a class="dropdown-item" href="#word"><i class="mdi mdi-download"></i> Download Word Report</a>
+                                    <a class="dropdown-item" href="#pdf"><i class="mdi mdi-download"></i> Download Pdf Report</a>
+                                    <a class="dropdown-item" href="#googledoc"><i class="mdi mdi-download"></i> Download Google Doc Report</a>
+                                    <a class="dropdown-item" href="#excel"><i class="mdi mdi-download"></i> Download Excel Report</a>
+                                    @if(isset($tagArr))
+                                        <a class="dropdown-item" href="#pdf_desc"><i class="mdi mdi-download"></i> Download PDF Description.</a>
+                                    @endif
+                                    @if($zihad==1)
                                         <a class="dropdown-item" href="#lovezihad"><i class="mdi mdi-download"></i> Download Love Zihad Report</a>
-                                        @endif
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -162,657 +124,503 @@
             </div>
 
             <div class="row" style="position: relative;top: 50px;">
-
                 <div class="col-md-12 col-xl-12">
-
                     <div class="card">
-
                         <div class="card-body">
 
                             <div class="table-responsive">
-                                <div id="datatable-buttons_wrapper" class="dataTables_wrapper dt-bootstrap4 no-footer">
-                                    <div class="row">
+                                <div class="row">
 
-                                        @php
-                                            $total_news = 0;
-                                        @endphp
-                                        @foreach ($dataAllTeamReport as $key => $teamData)
-                                            @php
-                                                $total_news = $total_news + $teamData['team_count'];
-                                            @endphp
-                                        @endforeach
+                                    {{-- reportTitle --}}
+                                    <table class="tableStyleHeading" cellspacing="0" cellpadding="2" style="text-align: center;">
+                                        <tbody>
+                                        <tr>
+                                            <td style="text-align: center;font-size: 15px;font-weight:bold">
+                                                {{ $reportTitle }}
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
 
-                                        <table class="tableStyleHeading" cellspacing="0" cellpadding="2"
-                                            style="text-align: center;">
-                                            <tbody>
+                                    {{-- INDEX --}}
+                                    <table class="tableStyle" border="1" cellspacing="0" cellpadding="2" width="100%" style="border: 1px solid black;">
+                                        <tbody>
+                                        <tr>
+                                            <td style="background-color: #d9e2f3; color: #000000; text-align: center;" width="10%">#</td>
+                                            <td style="background-color: #FFC000; color: #000000; text-align: center;" width="70%">Topic</td>
+                                            <td style="background-color: #d9e2f3; color: #000000; text-align: center;" width="20%">News Count ({{ $repcount }})</td>
+                                        </tr>
+
+                                        @if ($report_data_type == 'base_report')
+                                            @foreach ($dataModule as $key => $datas)
                                                 <tr>
-                                                    <td style="text-align: center; font-size: 15px;font-weight:bold">
-                                                        {{ $reportTitle }}</td>
+                                                    <td style="border: 1px solid #000000; text-align: center;" width="10%">{{ $key + 1 }}</td>
+                                                    <td style="border: 1px solid #000000; text-align: left;" width="70%" align="left">
+                                                        {{ $datas['module']['name'] }}
+                                                    </td>
+                                                    <td style="border: 1px solid #000000; text-align: center;" width="20%">{{ $datas['module_count'] }}</td>
                                                 </tr>
-                                                @if ($reportHeading)
-                                                    <tr>
-                                                        <td style="text-align: center; font-weight:bold">
-                                                            {{ $reportHeading }}</td>
-                                                    </tr>
-                                                @endif
-                                                @if ($reportDescription)
-                                                    <tr>
-                                                        <td style="text-align: center">{{ $reportDescription }}</td>
-                                                    </tr>
-                                                @endif
-                                            </tbody>
-                                        </table>
-
-
-                                        {{-- TEAM HEADING INDEX --}}
-                                        @if ($show_index)
-                                            <table class="tableStyle" border="1" cellspacing="0" cellpadding="2"
-                                                width="100%" style="border: 1px solid black;">
-                                                <tbody>
-                                                    @foreach ($dataAllTeamReport as $key => $teamData)
-                                                        <!-- Team Header Row -->
-                                                        <tr>
-                                                            <td colspan="2"
-                                                                style="background-color: #FFC000; color: #000000; text-align: center;"
-                                                                width="70%">
-                                                                {{ $teamData['team']['name'] }}
-                                                            </td>
-                                                            <td style="background-color: #d9e2f3; color: #000000; text-align: center;"
-                                                                width="20%">
-                                                                News Count ({{ $teamData['team_count'] }})
-                                                            </td>
-                                                        </tr>
-
-                                                        <!-- Loop through chapters for each team -->
-                                                        @foreach (collect($data)->where('team_id', $teamData['team_id']) as $chapterData)
-                                                            <tr>
-                                                                <!-- Chapter index -->
-                                                                <td style="border: 1px solid #000000; text-align: center;"
-                                                                    width="10%">
-                                                                    {{ $loop->iteration }}
-                                                                </td>
-
-                                                                <!-- Chapter Name -->
-                                                                <td style="border: 1px solid #000000; text-align: left;"
-                                                                    width="70%">
-                                                                    @if (isset($chapterData['chapter']['id']))
-                                                                        {{ $moduleNameArr[$chapterData['chapter']['id']] }}
-                                                                        ->
-                                                                        {{ $chapterData['chapter']['name'] }}
-                                                                    @endif
-                                                                </td>
-
-                                                                <!-- Chapter Count -->
-                                                                <td style="border: 1px solid #000000; text-align: center;"
-                                                                    width="20%">
-                                                                    {{ $chapterData['chapter_count'] }}
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
+                                            @endforeach
+                                        @else
+                                            @foreach ($data as $key => $datas)
+                                                <tr>
+                                                    <td style="border: 1px solid #000000; text-align: center;" width="10%">{{ $key + 1 }}</td>
+                                                    <td style="border: 1px solid #000000; text-align: left;" width="70%" align="left">
+                                                        @if (isset($datas['chapter']['id']))
+                                                            {{ $moduleNameArr[$datas['chapter']['id']] }} -> {{ $datas['chapter']['name'] }}
+                                                        @endif
+                                                    </td>
+                                                    <td style="border: 1px solid #000000; text-align: center;" width="20%">{{ $datas['chapter_count'] }}</td>
+                                                </tr>
+                                            @endforeach
                                         @endif
+                                        </tbody>
+                                    </table>
 
+                                    @php
+                                        $showEndReport = false;
+                                        $serial = (method_exists($keyNews, 'currentPage') && method_exists($keyNews, 'perPage'))
+                                            ? (($keyNews->currentPage() - 1) * $keyNews->perPage()) + 1
+                                            : 1;
+                                    @endphp
 
-                                        @php
-                                            $showEndReport = false;
-                                        @endphp
+                                    <div class="col-md-12 col-xl-12">
+                                        <section class="light">
+                                            <div class="container-fluid py-2 mt-3">
+                                                <div class="scrolling-pagination">
 
-                                        <div class="col-md-12 col-xl-12">
-                                            <section class="light">
-                                                <div class="container-fluid py-2 mt-3">
-                                                    <div class="scrolling-pagination">
-                                                        @foreach ($keyNews as $key => $reports)
-                                                            @php
-                                                                //exit();
-                                                                //dd($reports);
+                                                    @foreach ($keyNews as $key => $reports)
+                                                        @php
+                                                            // $reports is App\Models\Report (Eloquent model) as per your dd()
 
-                                                                if ($keyNews->hasMorePages() == '') {
-                                                                    $showEndReport = true;
-                                                                }
+                                                            if($keyNews->hasMorePages() == ""){
+                                                                $showEndReport = true;
+                                                            }
 
-                                                                if ($reports['website_id'] == '1') {
-                                                                    $prefix = config('app.app_domain_info') . 'public/';
-                                                                } else {
-                                                                    $prefix =
-                                                                        config('app.app_domain_issue') . 'public/';
-                                                                }
+                                                            $websiteId = data_get($reports, 'website_id');
+                                                            if ($websiteId == '1') {
+                                                                $prefix = config('app.app_domain_info').'public/';
+                                                            } else {
+                                                                $prefix = config('app.app_domain_issue').'public/';
+                                                            }
 
-                                                                $defaultPlaceholder =
-                                                                    config('app.url') . 'public/' . 'placeholder.png';
+                                                            $defaultPlaceholder = config('app.url') . 'public/'. 'placeholder.png';
+                                                            $publish_at = \Carbon\Carbon::createFromTimestamp(strtotime(data_get($reports, 'publish_at')))->format('M d, Y');
+                                                            $downloadHeading = '_' . str_replace(' ', '_', strtolower((string) data_get($reports,'heading','')));
 
-                                                                $created_at = \Carbon\Carbon::createFromTimestamp(
-                                                                    strtotime($reports['created_at']),
-                                                                )->format('M d, Y');
-                                                                $publish_at = \Carbon\Carbon::createFromTimestamp(
-                                                                    strtotime($reports['publish_at']),
-                                                                )->format('M d, Y');
-                                                                $downloadHeading =
-                                                                    '_' .
-                                                                    str_replace(
-                                                                        ' ',
-                                                                        '_',
-                                                                        strtolower($reports['heading']),
-                                                                    );
-                                                            @endphp
+                                                            // Relations (always safe)
+                                                            $videoLinks = collect(data_get($reports, 'videolink', []));
+                                                            $imageLinks = collect(data_get($reports, 'imagelink', []));
+                                                            $followups  = collect(data_get($reports, 'followup', []));
+                                                            $documents  = collect(data_get($reports, 'document', []));
 
-                                                            <article class="postcard light {{ $publicReportColor }}">
+                                                            // FIR vs GENERAL docs (based on document_type)
+                                                            $firDocs = $documents->filter(function($d){
+                                                                $t = strtolower((string) data_get($d,'document_type',''));
+                                                                return str_contains($t, 'fir');
+                                                            })->values();
 
-                                                                <div class="row" style="overflow: scroll; width:100%;">
-                                                                <div @mobile class="col-12" @else
-                                                                    class="col-6" @endmobile>
-                                                                    <!-- Slider main container -->
+                                                            $genDocs = $documents->reject(function($d){
+                                                                $t = strtolower((string) data_get($d,'document_type',''));
+                                                                return str_contains($t, 'fir');
+                                                            })->values();
+
+                                                            // URL normalizer
+                                                            $withScheme = function ($url) {
+                                                                $url = trim((string)$url);
+                                                                if ($url === '') return '';
+                                                                if (!\Illuminate\Support\Str::startsWith($url, ['http://','https://'])) return 'https://'.$url;
+                                                                return $url;
+                                                            };
+
+                                                            $reportType = data_get($reports,'report_type');
+                                                        @endphp
+
+                                                        <article class="postcard light {{ $publicReportColor }}">
+                                                            <div class="row" style="overflow: scroll; width:100%;">
+                                                                <div @mobile class="col-12" @else class="col-6" @endmobile>
+
                                                                     <div class="swiper">
-                                                                        <!-- Additional required wrapper -->
                                                                         <div class="swiper-wrapper">
-                                                                            <!-- screenshots Slides -->
-                                                                            @foreach ($reports['screenshot'] as $screenshot)
-                                                                                @if ($screenshot['screenshot'] != '')
-                                                                                    @php
-                                                                                        $type =
-                                                                                            $screenshot[
-                                                                                                'screenshot_type'
-                                                                                            ];
-                                                                                        $type = str_replace(
-                                                                                            '_',
-                                                                                            ' ',
-                                                                                            $type,
-                                                                                        );
-                                                                                        $type =
-                                                                                            ucwords($type) .
-                                                                                            ' Screenshot';
 
-                                                                                        $finalScreenshot = '';
+                                                                            @if($reportType == 'News')
 
-                                                                                        if (
-                                                                                            $screenshot['screenshot'] !=
-                                                                                            ''
-                                                                                        ) {
-                                                                                            $finalScreenshot = Helper::getImageUrl(
-                                                                                                $screenshot[
-                                                                                                    'screenshot'
-                                                                                                ],
-                                                                                            );
-                                                                                        } else {
-                                                                                            $finalScreenshot =
-                                                                                                $prefix .
-                                                                                                'placeholder.png';
-                                                                                        }
-                                                                                    @endphp
-                                                                                    <div class="swiper-slide">
+                                                                                {{-- screenshots --}}
+                                                                                @foreach (collect(data_get($reports,'screenshot',[])) as $screenshot)
+                                                                                    @if (!empty(data_get($screenshot,'screenshot')))
+                                                                                        @php
+                                                                                            $type = ucwords(str_replace('_', ' ', (string) data_get($screenshot,'screenshot_type'))) . ' Screenshot';
+                                                                                            $finalScreenshot = Helper::getImageUrl(data_get($screenshot,'screenshot'));
+                                                                                        @endphp
 
-                                                                                        <a href="javascript:void(0);"
-                                                                                            class="pop">
-                                                                                            <img class="postcard__img lazyload blur-up"
-                                                                                                src="{{ $defaultPlaceholder }}"
-                                                                                                data-sizes="auto"
-                                                                                                data-src="{{ $finalScreenshot }}"
-                                                                                                data-srcset="{{ $finalScreenshot }}"
-                                                                                                alt="{{ $type }}" />
-                                                                                        </a>
+                                                                                        <div class="swiper-slide">
+                                                                                            <a href="javascript:void(0);" class="pop">
+                                                                                                <img class="postcard__img lazyload blur-up"
+                                                                                                     src="{{ $defaultPlaceholder }}"
+                                                                                                     data-sizes="auto"
+                                                                                                     data-src="{{ $finalScreenshot }}"
+                                                                                                     data-srcset="{{ $finalScreenshot }}"
+                                                                                                     alt="{{ $type }}" />
+                                                                                            </a>
 
-                                                                                        <a class="downloadImage"
-                                                                                            href="{{ $finalScreenshot }}"
-                                                                                            target="_blank"
-                                                                                            download="{{ $screenshot['screenshot_type'] }}{{ $downloadHeading }}">
-                                                                                            <i
-                                                                                                class="fas fa-download"></i>
-                                                                                        </a>
+                                                                                            <a class="downloadImage"
+                                                                                               href="{{ $finalScreenshot }}"
+                                                                                               target="_blank"
+                                                                                               download="{{ data_get($screenshot,'screenshot_type') }}{{ $downloadHeading }}">
+                                                                                                <i class="fas fa-download"></i>
+                                                                                            </a>
 
-                                                                                        <div class="container py-5"
-                                                                                            style="bottom: -55px; position: absolute;">
-                                                                                            <div class="text-center">
-                                                                                                <p
-                                                                                                    class="btn btn-{{ config('app.color_scheme') }}">
-                                                                                                    {{ $type }}
-                                                                                                </p>
+                                                                                            <div class="container py-5" style="bottom: -55px; position: absolute;">
+                                                                                                <div class="text-center">
+                                                                                                    <p class="btn btn-{{ config('app.color_scheme') }}">{{ $type }}</p>
+                                                                                                </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                @endif
-                                                                            @endforeach
+                                                                                    @endif
+                                                                                @endforeach
 
-                                                                            <!-- featuredimage Slides -->
-                                                                            @foreach ($reports['feateredimage'] as $key => $featured_image)
-                                                                                @if ($featured_image['featured_image'] != '')
-                                                                                    @php
-                                                                                        $type = ucwords(
-                                                                                            'Featured Image',
-                                                                                        );
+                                                                                {{-- featured image --}}
+                                                                                @foreach (collect(data_get($reports,'feateredimage',[])) as $featured_image)
+                                                                                    @if (!empty(data_get($featured_image,'featured_image')))
+                                                                                        @php
+                                                                                            $type = 'Featured Image';
+                                                                                            $finalsource = Helper::getImageUrl(data_get($featured_image,'featured_image'));
+                                                                                        @endphp
 
-                                                                                        $finalsource = '';
+                                                                                        <div class="swiper-slide">
+                                                                                            <a href="javascript:void(0);" class="pop">
+                                                                                                <img class="postcard__img lazyload blur-up"
+                                                                                                     src="{{ $defaultPlaceholder }}"
+                                                                                                     data-sizes="auto"
+                                                                                                     data-src="{{ $finalsource }}"
+                                                                                                     data-srcset="{{ $finalsource }}"
+                                                                                                     alt="{{ $type }}" />
+                                                                                            </a>
 
-                                                                                        if (
-                                                                                            $featured_image[
-                                                                                                'featured_image'
-                                                                                            ] != ''
-                                                                                        ) {
-                                                                                            $finalsource = Helper::getImageUrl(
-                                                                                                $featured_image[
-                                                                                                    'featured_image'
-                                                                                                ],
-                                                                                            );
-                                                                                        } else {
-                                                                                            $finalsource =
-                                                                                                $prefix .
-                                                                                                'placeholder.png';
-                                                                                        }
-                                                                                    @endphp
-                                                                                    <div class="swiper-slide">
+                                                                                            <a class="downloadImage"
+                                                                                               href="{{ $finalsource }}"
+                                                                                               target="_blank"
+                                                                                               download="{{ $type }}{{ $downloadHeading }}">
+                                                                                                <i class="fas fa-download"></i>
+                                                                                            </a>
 
-                                                                                        <a href="javascript:void(0);"
-                                                                                            class="pop">
-                                                                                            <img class="postcard__img lazyload blur-up"
-                                                                                                src="{{ $defaultPlaceholder }}"
-                                                                                                data-sizes="auto"
-                                                                                                data-src="{{ $finalsource }}"
-                                                                                                data-srcset="{{ $finalsource }}"
-                                                                                                alt="{{ $type }}" />
-                                                                                        </a>
-
-                                                                                        <a class="downloadImage"
-                                                                                            href="{{ $finalsource }}"
-                                                                                            target="_blank"
-                                                                                            download="{{ $type }}{{ $downloadHeading }}">
-                                                                                            <i
-                                                                                                class="fas fa-download"></i>
-                                                                                        </a>
-
-                                                                                        <div class="container py-5"
-                                                                                            style="bottom: -55px; position: absolute;">
-                                                                                            <div class="text-center">
-                                                                                                <p
-                                                                                                    class="btn btn-{{ config('app.color_scheme') }}">
-                                                                                                    {{ $type }}
-                                                                                                </p>
+                                                                                            <div class="container py-5" style="bottom: -55px; position: absolute;">
+                                                                                                <div class="text-center">
+                                                                                                    <p class="btn btn-{{ config('app.color_scheme') }}">{{ $type }}</p>
+                                                                                                </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                @endif
-                                                                            @endforeach
+                                                                                    @endif
+                                                                                @endforeach
 
+                                                                                {{-- documents (slides icons) --}}
+                                                                                @foreach ($documents as $document)
+                                                                                    @if (!empty(data_get($document,'document')))
+                                                                                        @php
+                                                                                            $type = ucwords(str_replace('_', ' ', (string) data_get($document,'document_type')));
+                                                                                            if (!empty(data_get($document,'document_name'))) $type = data_get($document,'document_name');
 
-                                                                            <!-- Document Slides -->
-                                                                            @foreach ($reports['document'] as $key => $document)
-                                                                                @if ($document['document'] != '')
-                                                                                    @php
-                                                                                        $type =
-                                                                                            $document['document_type'];
-                                                                                        $type = str_replace(
-                                                                                            '_',
-                                                                                            ' ',
-                                                                                            $type,
-                                                                                        );
-                                                                                        $type = ucwords($type);
+                                                                                            $finalDocUrl = Helper::getImageUrl(data_get($document,'document'));
+                                                                                            $displayIcon = $prefix.'placeholder.png';
+                                                                                        @endphp
 
-                                                                                        if (
-                                                                                            !empty(
-                                                                                                $document[
-                                                                                                    'document_name'
-                                                                                                ]
-                                                                                            )
-                                                                                        ) {
-                                                                                            $type =
-                                                                                                $document[
-                                                                                                    'document_name'
-                                                                                                ];
-                                                                                        }
+                                                                                        <div class="swiper-slide">
+                                                                                            <a href="javascript:void(0);" class="pop">
+                                                                                                <img class="postcard__img lazyload blur-up"
+                                                                                                     src="{{ $defaultPlaceholder }}"
+                                                                                                     data-sizes="auto"
+                                                                                                     data-src="{{ $displayIcon }}"
+                                                                                                     data-srcset="{{ $displayIcon }}"
+                                                                                                     alt="{{ $type }}" />
+                                                                                            </a>
 
-                                                                                        $source = $document['document'];
-                                                                                        $extension = '';
+                                                                                            <a class="downloadImage"
+                                                                                               href="{{ $finalDocUrl }}"
+                                                                                               target="_blank"
+                                                                                               download="{{ data_get($document,'document_type') }}{{ $downloadHeading }}">
+                                                                                                <i class="fas fa-download"></i>
+                                                                                            </a>
 
-                                                                                        $finalsource = '';
-
-                                                                                        if (
-                                                                                            $document['document'] != ''
-                                                                                        ) {
-                                                                                            $finalsource = Helper::getImageUrl(
-                                                                                                $document['document'],
-                                                                                            );
-                                                                                        } else {
-                                                                                            $finalsource =
-                                                                                                $prefix .
-                                                                                                'placeholder.png';
-                                                                                        }
-
-                                                                                        $displayIcon =
-                                                                                            $prefix . 'placeholder.png';
-                                                                                        if ($extension == 'pdf') {
-                                                                                            $displayIcon =
-                                                                                                $prefix .
-                                                                                                'placeholder_pdf.png';
-                                                                                        }
-                                                                                    @endphp
-                                                                                    <div class="swiper-slide">
-                                                                                        <a href="javascript:void(0);"
-                                                                                            class="pop">
-                                                                                            <img class="postcard__img lazyload blur-up"
-                                                                                                src="{{ $defaultPlaceholder }}"
-                                                                                                data-sizes="auto"
-                                                                                                data-src="{{ $displayIcon }}"
-                                                                                                data-srcset="{{ $displayIcon }}"
-                                                                                                alt="{{ $type }}" />
-                                                                                        </a>
-
-                                                                                        <a class="downloadImage"
-                                                                                            href="{{ $prefix . $finalsource }}"
-                                                                                            target="_blank"
-                                                                                            download="{{ $document['document_type'] }}{{ $downloadHeading }}">
-                                                                                            <i
-                                                                                                class="fas fa-download"></i>
-                                                                                        </a>
-
-                                                                                        <div class="container py-5"
-                                                                                            style="bottom: -55px; position: absolute;">
-                                                                                            <div class="text-center">
-                                                                                                <p
-                                                                                                    class="btn btn-{{ config('app.color_scheme') }}">
-                                                                                                    {{ $type }}
-                                                                                                </p>
+                                                                                            <div class="container py-5" style="bottom: -55px; position: absolute;">
+                                                                                                <div class="text-center">
+                                                                                                    <p class="btn btn-{{ config('app.color_scheme') }}">{{ $type }}</p>
+                                                                                                </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                @endif
-                                                                            @endforeach
+                                                                                    @endif
+                                                                                @endforeach
 
+                                                                            @else
+                                                                                @php
+                                                                                    $type = "Social Media Image";
+                                                                                    $finalScreenshot = Helper::getImageUrl(data_get($reports,'image'));
+                                                                                @endphp
+
+                                                                                <div class="swiper-slide">
+                                                                                    <a href="javascript:void(0);" class="pop">
+                                                                                        <img class="postcard__img lazyload blur-up"
+                                                                                             src="{{ $defaultPlaceholder }}"
+                                                                                             data-sizes="auto"
+                                                                                             data-src="{{ $finalScreenshot }}"
+                                                                                             data-srcset="{{ $finalScreenshot }}"
+                                                                                             alt="{{ $type }}" />
+                                                                                    </a>
+
+                                                                                    <a class="downloadImage"
+                                                                                       href="{{ $finalScreenshot }}"
+                                                                                       target="_blank"
+                                                                                       download="{{ $downloadHeading }}">
+                                                                                        <i class="fas fa-download"></i>
+                                                                                    </a>
+
+                                                                                    <div class="container py-5" style="bottom: -55px; position: absolute;">
+                                                                                        <div class="text-center">
+                                                                                            <p class="btn btn-{{ config('app.color_scheme') }}">{{ $type }}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endif
                                                                         </div>
 
-                                                                        <!-- If we need navigation buttons -->
                                                                         <div class="swiper-button-prev"></div>
                                                                         <div class="swiper-button-next"></div>
-
-
                                                                     </div>
                                                                 </div>
-                                                            <div @mobile class="col-12" @else
-                                                                class="col-6" @endmobile>
-                                                                <div class="postcard__text t-dark">
-                                                                    <h1
-                                                                        class="postcard__title {{ $publicReportColor }}">
-                                                                        <a href="{{ $reports['link'] }}"
-                                                                            target="_blank">{{ $reports['serial_number'] }}.
-                                                                            {{ ucfirst($reports['heading']) }}</a>
-                                                                    </h1>
-                                                                    <div class="postcard__subtitle fw-bold">
-                                                                        <i class="fas fa-folder mb-2 mr-2"></i>
-                                                                        {{ ucfirst($reports['module']['name']) }}
-                                                                        ->
-                                                                        {{ ucfirst($reports['chapter']['name']) }}
-                                                                    </div>
-                                                                    <div class="postcard__subtitle ">
-                                                                        <time datetime="2020-05-25 12:00:00">
-                                                                            <i
-                                                                                class="fas fa-calendar-alt mr-2"></i>
-                                                                            {{ $publish_at }}
-                                                                        </time>
-                                                                        &nbsp;
-                                                                        <i class="fas fa-language mr-2 fsicon"></i>
-                                                                        {{ ucwords($reports['language_name']) }}
 
-                                                                        @if ($reports['location_name'])
-                                                                            &nbsp; <i
-                                                                                class="fas fa-location-arrow mr-2"></i>
-                                                                            {{ $reports['location_name'] }}
-                                                                            @if ($reports['location_state_name'])
-                                                                                ({{ $reports['location_state_name'] }})
+                                                                <div @mobile class="col-12" @else class="col-6" @endmobile>
+                                                                    <div class="postcard__text t-dark">
+                                                                        <h1 class="postcard__title {{ $publicReportColor }}">
+                                                                            <a href="{{ data_get($reports,'link') }}" target="_blank">
+                                                                                {{ $serial }}. {{ ucfirst((string) data_get($reports,'heading')) }}
+                                                                            </a>
+                                                                        </h1>
+                                                                        @php $serial++; @endphp
+
+                                                                        <div class="postcard__subtitle fw-bold">
+                                                                            <i class="fas fa-folder mb-2 mr-2"></i>
+                                                                            {{ ucfirst((string) data_get($reports,'module.name','')) }} -> {{ ucfirst((string) data_get($reports,'chapter.name','')) }}
+                                                                        </div>
+
+                                                                        {{-- ✅ ONE LINE: Date | Language | Location | Source | Video | Image | FIR | Docs | Followups --}}
+                                                                        <div class="postcard__subtitle">
+                                                                            <time datetime="2020-05-25 12:00:00">
+                                                                                <i class="fas fa-calendar-alt mr-2"></i>
+                                                                                {{ $publish_at }}
+                                                                            </time>
+
+                                                                            &nbsp;
+                                                                            <i class="fas fa-language mr-2 fsicon"></i>
+                                                                            {{ ucwords((string) data_get($reports,'language_name','')) }}
+
+                                                                            @if (data_get($reports,'location_name'))
+                                                                                &nbsp; <i class="fas fa-location-arrow mr-2"></i>
+                                                                                {{ data_get($reports,'location_name') }}
+                                                                                @if (data_get($reports,'location_state_name'))
+                                                                                    ({{ data_get($reports,'location_state_name') }})
+                                                                                @endif
                                                                             @endif
-                                                                        @endif
 
-                                                                         @if ($reports['link'])
-                                                                            &nbsp; <span
-                                                                                class="tag__item play {{ $publicReportColor }}">
-                                                                                <a href="{{ $reports['link'] }}"
-                                                                                    target="_blank"><i
-                                                                                        class="fas fa-link mr-2"></i>
-                                                                                    {{ ucwords($reports['source']) }}</a>
-                                                                            </span>
-                                                                        @endif
-                                                                             |
-                                                                        
-                                                                        @if ($reports->videolink && $reports->videolink->count())
-    @foreach ($reports->videolink as $k => $v)
-        @php
-            $url = $v->videolink ?? '';
-            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
-                $url = 'https://' . $url;
-            }
-        @endphp
+                                                                            @if (data_get($reports,'link'))
+                                                                                &nbsp; <span class="tag__item play {{ $publicReportColor }}">
+                                                                                    <a href="{{ data_get($reports,'link') }}" target="_blank" rel="noopener">
+                                                                                        <i class="fas fa-link mr-2"></i> {{ ucwords((string) data_get($reports,'source','')) }}
+                                                                                    </a>
+                                                                                </span>
+                                                                            @endif
 
-        @if ($url)
-            &nbsp; <span class="tag__item play {{ $publicReportColor }}">
-                <a href="{{ $url }}" target="_blank" rel="noopener">
-                    <i class="fas fa-video mr-2"></i> Video {{ $k + 1 }}
-                </a>
-            </span>
-        @endif
-    @endforeach
-@endif
-     |
+                                                                            {{-- ===================== INLINE EXTRA LINKS (SAME LINE) ===================== --}}
+                                                                            @php
+                                                                                $hasAnyExtra = $videoLinks->count() || $imageLinks->count() || $firDocs->count() || $genDocs->count() || $followups->count();
+                                                                            @endphp
 
-@if ($reports->imagelink && $reports->imagelink->count())
-    @foreach ($reports->imagelink as $k => $img)
-        @php
-            $url = $img->imagelink ?? '';
-            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
-                $url = 'https://' . $url;
-            }
-        @endphp
+                                                                            @if($reportType == 'News' && $hasAnyExtra)
+                                                                                &nbsp; | &nbsp;
 
-        @if ($url)
-            &nbsp; <span class="tag__item play {{ $publicReportColor }}">
-                <a href="{{ $url }}" target="_blank" rel="noopener">
-                    <i class="fas fa-image mr-2"></i> Image Source {{ $k + 1 }}
-                </a>
-            </span>
-        @endif
-    @endforeach
-@endif 
+                                                                                {{-- Video links --}}
+                                                                                @if($videoLinks->count())
+                                                                                    @foreach($videoLinks as $k => $v)
+                                                                                        @php
+                                                                                            $url = $withScheme(data_get($v,'videolink',''));
+                                                                                        @endphp
+                                                                                        @if($url)
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $url }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-video mr-2"></i> Video {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                            @if($k < $videoLinks->count() - 1) &nbsp; @endif
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                    &nbsp; | &nbsp;
+                                                                                @endif
 
+                                                                                {{-- Image source links --}}
+                                                                                @if($imageLinks->count())
+                                                                                    @foreach($imageLinks as $k => $img)
+                                                                                        @php
+                                                                                            $url = $withScheme(data_get($img,'imagelink', data_get($img,'image_link','')));
+                                                                                        @endphp
+                                                                                        @if($url)
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $url }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-image mr-2"></i> Image Source {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                            @if($k < $imageLinks->count() - 1) &nbsp; @endif
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                    &nbsp; | &nbsp;
+                                                                                @endif
 
-{{-- ===================== DOCUMENTS (FIR + GENERAL) ===================== --}}
-@if ($reports->document && $reports->document->count() > 0)
+                                                                                {{-- FIR: Link + File (from report_documents) --}}
+                                                                                @if($firDocs->count())
+                                                                                    @foreach($firDocs as $k => $doc)
+                                                                                        @php
+                                                                                            $firLink = $withScheme(data_get($doc,'document_link',''));
+                                                                                            $firFileRaw = data_get($doc,'document','');
+                                                                                            $firFile = $firFileRaw
+                                                                                                ? (\Illuminate\Support\Str::startsWith($firFileRaw, ['http://','https://']) ? $firFileRaw : Helper::getImageUrl($firFileRaw))
+                                                                                                : '';
+                                                                                        @endphp
 
-    @php
-        $firLink  = null;
-        $firFile  = null; // (image/pdf/file)
-        $docLink  = null;
-        $docFile  = null;
+                                                                                        @if($firLink)
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $firLink }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-link mr-2"></i> FIR Link {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                        @endif
 
-        foreach ($reports->document as $doc) {
+                                                                                        @if($firFile)
+                                                                                            &nbsp;
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $firFile }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-file mr-2"></i> FIR File {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                        @endif
 
-            $type = $doc->document_type ?? null;
+                                                                                        @if($k < $firDocs->count() - 1) &nbsp; @endif
+                                                                                    @endforeach
+                                                                                    &nbsp; | &nbsp;
+                                                                                @endif
 
-            // FIR
-            if ($type === 'fir_copy') {
-                if (!empty($doc->document_link) && !$firLink) {
-                    $firLink = str_starts_with($doc->document_link, 'http')
-                        ? $doc->document_link
-                        : 'https://' . $doc->document_link;
-                }
+                                                                                {{-- General Documents: Link + File --}}
+                                                                                @if($genDocs->count())
+                                                                                    @foreach($genDocs as $k => $doc)
+                                                                                        @php
+                                                                                            $docLink = $withScheme(data_get($doc,'document_link',''));
+                                                                                            $docFileRaw = data_get($doc,'document','');
+                                                                                            $docFile = $docFileRaw
+                                                                                                ? (\Illuminate\Support\Str::startsWith($docFileRaw, ['http://','https://']) ? $docFileRaw : Helper::getImageUrl($docFileRaw))
+                                                                                                : '';
 
-                if (!empty($doc->document) && !$firFile) {
-                    // if document is stored as uploads path, use Helper::getImageUrl if you have it
-                    $firFile = str_starts_with($doc->document, 'http')
-                        ? $doc->document
-                        : Helper::getImageUrl($doc->document); // OR: asset($doc->document)
-                }
-            }
+                                                                                            $label ='Documents';
+                                                                                            if(empty($label)) $label = ucwords(str_replace('_',' ', (string) data_get($doc,'document_type','Document')));
+                                                                                        @endphp
 
-            // GENERAL DOCUMENT
-            if ($type === 'general') {
-                if (!empty($doc->document_link) && !$docLink) {
-                    $docLink = str_starts_with($doc->document_link, 'http')
-                        ? $doc->document_link
-                        : 'https://' . $doc->document_link;
-                }
+                                                                                        @if($docLink)
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $docLink }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-link mr-2"></i> {{ $label }} Link {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                        @endif
 
-                if (!empty($doc->document) && !$docFile) {
-                    $docFile = str_starts_with($doc->document, 'http')
-                        ? $doc->document
-                        : Helper::getImageUrl($doc->document); // OR: asset($doc->document)
-                }
-            }
-        }
-    @endphp
+                                                                                        @if($docFile)
+                                                                                            &nbsp;
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $docFile }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-file mr-2"></i> {{ $label }} File {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                        @endif
 
-         |
+                                                                                        @if($k < $genDocs->count() - 1) &nbsp; @endif
+                                                                                    @endforeach
+                                                                                    &nbsp; | &nbsp;
+                                                                                @endif
 
-    {{-- FIR LINK --}}
-    @if ($firLink)
-        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
-            <a href="{{ $firLink }}" target="_blank" rel="noopener">
-                <i class="fas fa-link mr-2"></i> FIR Link
-            </a>
-        </span>
-    @endif
+                                                                                {{-- Followups --}}
+                                                                                @if($followups->count())
+                                                                                    @foreach($followups as $k => $fu)
+                                                                                        @php
+                                                                                            $fuUrl = $withScheme(data_get($fu,'followup_link', data_get($fu,'link', data_get($fu,'url',''))));
+                                                                                        @endphp
+                                                                                        @if($fuUrl)
+                                                                                            <span class="tag__item play {{ $publicReportColor }}">
+                                                                                                <a href="{{ $fuUrl }}" target="_blank" rel="noopener">
+                                                                                                    <i class="fas fa-link mr-2"></i> Related News {{ $k + 1 }}
+                                                                                                </a>
+                                                                                            </span>
+                                                                                            @if($k < $followups->count() - 1) &nbsp; @endif
+                                                                                        @endif
+                                                                                    @endforeach
+                                                                                @endif
+                                                                            @endif
+                                                                        </div>
 
-    {{-- FIR FILE --}}
-    @if ($firFile)
-        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
-            <a href="{{ $firFile }}" target="_blank" rel="noopener">
-                <i class="fas fa-file mr-2"></i> FIR File
-            </a>
-        </span>
-    @endif
+                                                                        <div class="postcard__bar {{ $reportType == 'News' ? 'postcard__bar_red' : 'postcard__bar_blue' }}"></div>
 
-         |
+                                                                        <div class="postcard__preview-txt">
+                                                                            @if($reportType == 'News')
+                                                                                <ol>
+                                                                                    @foreach (collect(data_get($reports,'keypoint',[])) as $keypoint)
+                                                                                        <li>{{ trim((string) data_get($keypoint,'keypoint','')) }}</li>
+                                                                                    @endforeach
+                                                                                </ol>
+                                                                            @else
+                                                                                {!! trim((string) data_get($reports,'description','')) !!}
+                                                                            @endif
+                                                                        </div>
 
-    {{-- DOCUMENT LINK --}}
-    @if ($docLink)
-        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
-            <a href="{{ $docLink }}" target="_blank" rel="noopener">
-                <i class="fas fa-link mr-2"></i> Document Link
-            </a>
-        </span>
-    @endif
+                                                                        @php
+                                                                            $seperator = "\r\n \r\n";
+                                                                            $keypointDescription = [];
+                                                                            foreach (collect(data_get($reports,'keypoint',[])) as $kp){
+                                                                                $keypointDescription[] = trim((string) data_get($kp,'keypoint',''));
+                                                                            }
 
-         |
+                                                                            $socialShareContent = ucfirst((string) data_get($reports,'heading',''));
+                                                                            $socialShareContent .= $seperator.$publish_at;
+                                                                            $socialShareContent .= $seperator.(string) data_get($reports,'location_name','');
+                                                                            $socialShareContent .= $seperator.(string) data_get($reports,'link','');
+                                                                            $socialShareContent .= $seperator.strip_tags(implode("\r\n", $keypointDescription));
+                                                                        @endphp
 
-    {{-- DOCUMENT FILE --}}
-    @if ($docFile)
-        &nbsp;<span class="tag__item play {{ $publicReportColor }}">
-            <a href="{{ $docFile }}" target="_blank" rel="noopener">
-                <i class="fas fa-file mr-2"></i> Document File
-            </a>
-        </span>
-    @endif
-
-@endif
-
-     |
-
-
-
-                                                                        @if (count($reports['followup']) > 0)
-                                                                            
-                                                                            @foreach ($reports['followup'] as $key => $followup)
-                                                                                <a href="{{ $followup['followup_link'] }}"
-                                                                                    target="_blank">
-                                                                                    <i
-                                                                                        class="fas fa-link mr-2"></i>
-                                                                                    Related News
-                                                                                    {{ $key + 1 }}
-                                                                                </a> |
-                                                                            @endforeach
-                                                                        @endif
-                                                                    </div>
-
-                                                                    <div
-                                                                        class="postcard__bar {{ $reports['report_type'] == 'News' ? 'postcard__bar_red' : 'postcard__bar_blue' }}">
-                                                                    </div>
-
-                                                                    <div class="postcard__preview-txt">
-                                                                        <ol>
-                                                                            @foreach ($reports['keypoint'] as $key => $keypoint)
-                                                                                <li>{{ trim($keypoint['keypoint']) }}
-                                                                                </li>
-                                                                            @endforeach
-                                                                        </ol>
-                                                                    </div>
-
-                                                                    @if (empty($find_more))
-                                                                        <p style="padding-top:10px;">
-                                                                            <span class="causale"
-                                                                                style="margin:10px;color:#000; font-weight: 600; text-align:center;">
-                                                                                <a href="javascript:void(0);"
-                                                                                    onclick="findSimilar({{ $reports['team_id'] }},{{ $reports['module_id'] }},{{ $reports['chapter_id'] }});"
-                                                                                    style="color:#000;"
-                                                                                >
-                                                                                    <i
-                                                                                        class="fas fa-file mr-2 fsicon"></i>
-                                                                                    Click here to find <span
-                                                                                        class="text-info fs-4 fw-bold">{{ $chapterReportData[$reports['chapter_id']] }}</span>
-                                                                                    similar incidents
-                                                                                    of
-
-                                                                                    @if (!empty($reports['module']['name']))
-                                                                                        &nbsp;{{ ucfirst($reports['module']['name']) }}
-                                                                                    @endif
-
-                                                                                    @if (!empty($reports['chapter']['name']))
-                                                                                        &nbsp;->&nbsp;{{ ucfirst($reports['chapter']['name']) }}
-                                                                                    @endif
-                                                                                    <i
-                                                                                        class="fa fa-external-link-square"></i>
-                                                                                </a>
-                                                                            </span>
-                                                                        </p>
-                                                                    @endif
-
-                                                                    <div style="text-align: right;">
-                                                                      @php
-    $seperator = "\r\n \r\n"; // WhatsApp-friendly new lines
-
-    $keypointDescription = [];
-    foreach ($reports['keypoint'] as $key => $keypoint) {
-        $keypointDescription[] = trim($keypoint['keypoint']);
-    }
-
-    $socialShareContent  = ucfirst($reports['heading']);
-    $socialShareContent .= $seperator . $publish_at; // Date
-    $socialShareContent .= $seperator . ($reports['chapter']['name'] ?? ''); // Category
-    $socialShareContent .= $seperator . $reports['location_name']; // Location
-    $socialShareContent .= $seperator . ($reports['link'] ?? ''); // Link
-    $socialShareContent .= $seperator . strip_tags(implode("\r\n", $keypointDescription)); // Keypoints
-@endphp
-
-<div class="copyBtn" data-content="{{ $socialShareContent }}">
-    <button type="button" class="btn btn-{{ config('app.color_scheme') }} copyBtnText">
-        <i class="fas fa-share" style="font-size: 18px; margin-right:5px;"></i>
-        Share
-    </button>
-</div>
+                                                                        <div style="text-align: right;">
+                                                                            <div class="copyBtn" data-content="{{ $socialShareContent }}">
+                                                                                <button type="button" class="btn btn-{{ config('app.color_scheme') }} copyBtnText">
+                                                                                    <i class="fas fa-share" style="font-size: 18px; margin-right:5px;"></i> Share
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
 
                                                                     </div>
+                                                                </div>
 
+                                                            </div>
+                                                        </article>
+                                                    @endforeach
+
+                                                    @if($showEndReport == true)
+                                                        <div class="row">
+                                                            <div class="col-md-12 col-xl-12 text-center mt-5">
+                                                                <div class="btn btn-{{ config('app.color_scheme') }}">
+                                                                    Report End
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                    @endif
 
-                                                    </article>
-                                                @endforeach
-
-                                                @if ($showEndReport == true)
-                                                    <div class="row">
-                                                        <div class="col-md-12 col-xl-12 text-center mt-5">
-                                                            <div class="btn btn-{{ config('app.color_scheme') }}">
-                                                                Report End
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                @if ($keyNews)
-                                                    {{ $keyNews->links() }}
-                                                @endif
+                                                    @if($keyNews)
+                                                        {{ $keyNews->links() }}
+                                                    @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    </section>
-                                </div>
-
-
-                                @if ($fromPage == 'dmr')
+                                        </section>
+                                    </div>
+                                               @if ($fromPage == 'dmr')
                                     <div class="row">
                                         <div class="col-md-12 col-xl-12 text-left mt-5">
                                             <h5>
@@ -936,195 +744,135 @@
                                     </div>
                                 @endif
 
-
-
+                                </div>
                             </div>
-
-
 
                         </div>
                     </div>
 
                 </div>
-
-
-
             </div>
 
         </div>
-
     </div>
 
-</div>
-
-</div>
-
-<!-- Creates the bootstrap modal where the image will appear -->
-<div class="modal fade" id="imagemodal" tabindex="-1" role="dialog">
-<div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title" style="color: black;">Preview</h4>
-        </div>
-        <div class="modal-body" style="text-align: center">
-            <img src="" id="imagepreview" style="width: 100%;">
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    {{-- Image preview modal --}}
+    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel">Preview</h4>
+                </div>
+                <div class="modal-body" style="text-align: center">
+                    <img src="" id="imagepreview" style="width: 100%;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jscroll/2.4.1/jquery.jscroll.min.js"></script>
 
-<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+    <script type="text/javascript">
+        // ✅ Init all swipers (works for multiple cards + jscroll)
+        function initSwipers() {
+            document.querySelectorAll('.swiper').forEach(function (el) {
+                if (el.classList.contains('swiper-initialized')) return;
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jscroll/2.4.1/jquery.jscroll.min.js"></script>
-
-
-<script>
-    $('ul.pagination').hide();
-    $(function() {
-        $('.scrolling-pagination').jscroll({
-            loadingHtml: '<center><img src="{{ asset('public/images/loading.svg') }}" alt="Loading" /> <b>Loading...</b></center> ',
-            autoTrigger: true,
-            padding: 20,
-            nextSelector: '.pagination li.active + li a',
-            contentSelector: 'div.scrolling-pagination',
-            callback: function() {
-                $('ul.pagination').remove();
-            }
-        });
-    });
-
-    var swiper = "";
-
-    function findSimilar(team_id, module_id, chapter_id) {
-        $('#find_more_team_id').val(team_id);
-        $('#find_more_module_id').val(module_id);
-        $('#find_more_chapter_id').val(chapter_id);
-
-        $("#find_more_downloadForm").submit();
-    }
-
-    $(document).ready(function() {
-
-    $(".copyBtn").on('click', function () {
-    var textToCopy = $(this).data("content");
-
-    // Normalize
-    let lines = textToCopy.replace(/\r\n/g, "\n").split("\n").map(line => line.trim()).filter(line => line);
-
-    let heading  = lines[0] || "";
-    let date     = lines[1] || "";
-    let category = lines[2] || "";
-    let location = lines[3] || "";
-    let link     = lines[4] || "";
-    let keypoints = lines.slice(5);
-
-    const nl = "\n\n"; // double newline for WhatsApp spacing
-
-    let numberedKeypoints = keypoints.map((item, idx) => `${idx + 1}. ${item}`).join(nl);
-
-    let finalMessage =
-        `*Heading:* ${heading}${nl}` +
-        `*Date:* ${date}${nl}` +
-        `*Category:* ${category}${nl}` +
-        `*Location:* ${location}${nl}` +
-        `*Link:* ${link}${nl}` +
-        `*Keypoints:*${nl}${numberedKeypoints}`;
-
-    console.log("finalMessage (WhatsApp) =>\n" + finalMessage);
-
-    // ✅ Hidden textarea method (preserves newlines on paste)
-    let tempInput = $("<textarea>");
-    $("body").append(tempInput);
-    tempInput.val(finalMessage).select();
-    document.execCommand("copy");
-    tempInput.remove();
-
-    // Also update your visible textarea
-    $('#socialShareContent').val(finalMessage);
-
-    showDialog(
-        'Sharable Content Copied ✅ Heading, Date, Category, Location, Link & Keypoints',
-        '',
-        'success'
-    );
-    });
-
-
-
-        $('#overlay').hide();
-        $('#page_content').show();
-        $('.dropdown-toggle').dropdown();
-
-        $('a[href="#word"]').click(function() {
-            $('#download_report_type').val('word');
-            $("#downloadForm").submit();
-        });
-        $('a[href="#pdf"]').click(function() {
-            $('#download_report_type').val('pdf');
-            $("#downloadForm").submit();
-        });
-        $('a[href="#googledoc"]').click(function() {
-            $('#download_report_type').val('googledoc');
-            $("#downloadForm").submit();
-        });
-        $('a[href="#excel"]').click(function() {
-            $('#download_report_type').val('excel');
-            $("#downloadForm").submit();
-        });
-        $('a[href="#pdf_desc"]').click(function() {
-                console.log('PDF DESC clicked');
-                $('#download_report_type').val('pdf_desc');
-                $("#downloadForm").submit();
+                new Swiper(el, {
+                    speed: 400,
+                    slidesPerView: 1,
+                    loop: false,
+                    centeredSlides: true,
+                    spaceBetween: 20,
+                    zoom: { minRatio: 1, maxRatio: 5 },
+                    navigation: {
+                        nextEl: el.querySelector('.swiper-button-next'),
+                        prevEl: el.querySelector('.swiper-button-prev'),
+                    },
+                });
             });
-        $('a[href="#lovezihad"]').click(function() {
-                console.log('Love ZIhad CLicked');
-                $('#download_report_type').val('lovezihad');
-                $("#downloadForm").submit();
+        }
+
+        // ✅ jscroll setup
+        $('ul.pagination').hide();
+        $(function() {
+            $('.scrolling-pagination').jscroll({
+                loadingHtml: '<center><img src="{{ asset('public/images/loading.svg') }}" alt="Loading" /> <b>Loading...</b></center>',
+                autoTrigger: true,
+                padding: 20,
+                nextSelector: '.pagination li.active + li a',
+                contentSelector: 'div.scrolling-pagination',
+                callback: function() {
+                    $('ul.pagination').remove();
+                    initSwipers(); // ✅ re-init after new items loaded
+                }
+            });
+        });
+
+        function loadOtherSubCategory(chapter_id) {
+            $('#find_more_team_id').val('{{ implode(",",$team_name) }}');
+            $('#find_more_module_id').val('{{ implode(",",$module_ids_arr) }}');
+            $('#find_more_chapter_id').val(chapter_id);
+            $("#find_more_downloadForm").submit();
+        }
+
+        function findSimilar(team_id, module_id, chapter_id) {
+            $('#find_more_team_id').val(team_id);
+            $('#find_more_module_id').val(module_id);
+            $('#find_more_chapter_id').val(chapter_id);
+            $("#find_more_downloadForm").submit();
+        }
+
+        $(document).ready(function() {
+
+            $('#overlay').hide();
+            $('#page_content').show();
+            $('.dropdown-toggle').dropdown();
+
+            // ✅ Delegated click: works for dynamically loaded content (jscroll)
+            $(document).on('click', '.copyBtn', function() {
+                var textToCopy = $(this).data("content");
+                $('#socialShareContent').val(textToCopy);
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(textToCopy);
+                } else {
+                    $('#socialShareContent').focus();
+                    $('#socialShareContent').select();
+                    document.execCommand('copy');
+                }
+
+                if (typeof showDialog === "function") {
+                    showDialog('Sharable Content Copied : Heading, Date, Location, Link & Keypoints.', '', 'success');
+                } else {
+                    alert('Sharable Content Copied.');
+                }
             });
 
-        ////////////////////////
-        //new Photo layout
-        ////////////////////////
+            // ✅ Delegated pop image preview
+            $(document).on('click', '.pop', function() {
+                var src = $(this).find('img').attr('data-src') || $(this).find('img').attr('src');
+                $('#imagepreview').attr('src', src);
+                $('#imagemodal').modal('show');
+            });
 
-        //on click on image show image in popup modal
-        $('.pop').on('click', function() {
-            $('#imagepreview').attr('src', $(this).find('img').attr('src'));
-            $('#imagemodal').modal('show');
+            // Download type handlers
+            $(document).on('click','a[href="#word"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('word'); $("#downloadForm").submit(); });
+            $(document).on('click','a[href="#pdf"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('pdf'); $("#downloadForm").submit(); });
+            $(document).on('click','a[href="#googledoc"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('googledoc'); $("#downloadForm").submit(); });
+            $(document).on('click','a[href="#excel"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('excel'); $("#downloadForm").submit(); });
+            $(document).on('click','a[href="#pdf_desc"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('pdf_desc'); $("#downloadForm").submit(); });
+            $(document).on('click','a[href="#lovezihad"]', function(e){ e.preventDefault(); $('#downloadForm #report_type').val('lovezihad'); $("#downloadForm").submit(); });
+
+            // ✅ Init sliders on first load
+            initSwipers();
         });
-
-        swiper = new Swiper('.swiper', {
-            speed: 400,
-            slidesPerView: 1,
-            loop: false,
-            centeredSlides: true,
-            spaceBetween: 20,
-            // navigation: true,
-            zoom: {
-                minRatio: 1,
-                maxRatio: 5,
-            },
-            // Navigation arrows
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-        });
-
-
-
-
-    });
-
-    function openpopup(reportId) {
-        console.log('open popup reportId', reportId);
-        $('#imagemodal_' + reportId).modal('show');
-    }
-</script>
+    </script>
 @endsection
