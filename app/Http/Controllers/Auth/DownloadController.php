@@ -3133,7 +3133,7 @@ tr { page-break-inside: avoid; }
 
                 // Save Excel
                 $fileName = $downloadFileName . '.xlsx';
-                $filePath = storage_path(config('app.download_report_base_folder') . "/" . $fileName);
+                $filePath = storage_path(config('app.tempDir') . "/" . $fileName);
 
                 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
                 try {
