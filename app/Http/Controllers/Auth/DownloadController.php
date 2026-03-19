@@ -614,6 +614,13 @@ class DownloadController extends Controller
             $dataModule = $dataModule->where('has_followup', $followup);
         }
 
+
+         if (!empty($request->videolink)) {
+            $videolink = $request->videolink;
+            $data = $data->where('has_videolink', $videolink);
+            $dataModule = $dataModule->where('has_videolink', $videolink);
+        }
+
         if (!empty($request->calendar_date)) {
             $calendar_date = $request->calendar_date;
             $data = $data->where('calendar_date', $calendar_date);
@@ -731,6 +738,8 @@ class DownloadController extends Controller
 
         // $sql = $data->toSql();
         // $bindings = $data->getBindings();
+
+        // dd($bindings);
         // dd(Helper::interpolateQuery($sql, $bindings));
 
 
@@ -1250,6 +1259,10 @@ class DownloadController extends Controller
 
             if (!empty($request->followup)) {
                 $news->where('reports.has_followup', $request->followup);
+            }
+
+             if (!empty($request->videolink)) {
+                $news->where('reports.has_videolink', $request->videolink);
             }
 
             if (!empty($request->calendar_date)) {
@@ -2453,6 +2466,12 @@ tr { page-break-inside: avoid; }
             $dataAllTeamReport = $dataAllTeamReport->where('has_followup', $followup);
         }
 
+         if (!empty($request->videolink)) {
+            $videolink = $request->videolink;
+            $data = $data->where('has_videolink', $videolink);
+            $dataAllTeamReport = $dataAllTeamReport->where('has_videolink', $videolink);
+        }
+
         if (!empty($request->calendar_date)) {
             $calendar_date = $request->calendar_date;
             $data = $data->where('calendar_date', $calendar_date);
@@ -2695,6 +2714,11 @@ tr { page-break-inside: avoid; }
                 $news = $news->where('has_followup', $followup);
             }
 
+            if (!empty($request->videolink)) {
+                $videolink = $request->videolink;
+                $news = $news->where('has_videolink', $videolink);
+            }
+
             if (!empty($request->show_report_type)) {
                 $report_type_new = $request->show_report_type;
                 $news = $news->where('reports.report_type', $report_type_new);
@@ -2788,7 +2812,6 @@ tr { page-break-inside: avoid; }
         GROUP BY report_id
     ) rs2 ON rs1.id = rs2.min_id
 ) AS first_screenshot'), 'first_screenshot.report_id', '=', 'reports.id');
-
 
 
             // $sql = $news->toSql();
@@ -3561,6 +3584,7 @@ tr { page-break-inside: avoid; }
             $date_reports            = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
             $first_time_reports      = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
             $followup_reports        = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
+            $videolink_reports       = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
             $calendar_date_reports   = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
             $fir_documents_reports   = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
             $total_reports           = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'));
@@ -3577,6 +3601,7 @@ tr { page-break-inside: avoid; }
             $baseWhere($date_reports);
             $baseWhere($first_time_reports);
             $baseWhere($followup_reports);
+            $baseWhere($videolink_reports);
             $baseWhere($calendar_date_reports);
             $baseWhere($fir_documents_reports);
             $baseWhere($total_reports);
@@ -3585,6 +3610,7 @@ tr { page-break-inside: avoid; }
             // Additional specific conditions
             $first_time_reports->where('reports.first_time', 1);
             $followup_reports->where('reports.has_followup', 1);
+            $videolink_reports->where('reports.has_videolink', 1);
             $calendar_date_reports->where('reports.calendar_date', 1);
             $fir_documents_reports->join('report_documents', 'report_documents.report_id', '=', 'reports.id');
 
@@ -3599,6 +3625,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3618,6 +3645,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3636,6 +3664,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3654,6 +3683,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3672,6 +3702,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3690,6 +3721,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3708,6 +3740,7 @@ tr { page-break-inside: avoid; }
                         $date_reports,
                         $first_time_reports,
                         $followup_reports,
+                        $videolink_reports,
                         $calendar_date_reports,
                         $fir_documents_reports,
                         $total_reports,
@@ -3724,6 +3757,7 @@ tr { page-break-inside: avoid; }
             $data['date_reports']          = $date_reports->get();
             $data['first_time_reports']    = $first_time_reports->get();
             $data['followup_reports']      = $followup_reports->get();
+            $data['videolink']      = $videolink_reports->get();
             $data['calendar_date_reports'] = $calendar_date_reports->get();
             $data['fir_documents_reports'] = $fir_documents_reports->get();
 
@@ -3934,6 +3968,12 @@ tr { page-break-inside: avoid; }
             ->where('reports.has_followup', 1)
             ->where('reports.active', 1);
 
+            $videolink_reports = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'))
+            ->whereNull('reports.deleted_at')
+            ->where('reports.is_deleted', 0)
+            ->where('reports.has_videolink', 1)
+            ->where('reports.active', 1);
+
         $calendar_date_reports = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'))
             ->whereNull('reports.deleted_at')
             ->where('reports.is_deleted', 0)
@@ -3965,6 +4005,7 @@ tr { page-break-inside: avoid; }
             $languages = $languages->where('reports.user_id', $showReportForUser);
             $first_time_reports = $first_time_reports->where('reports.user_id', $showReportForUser);
             $followup_reports = $followup_reports->where('reports.user_id', $showReportForUser);
+            $videolink_reports = $videolink_reports->where('reports.user_id', $showReportForUser);
             $calendar_date_reports = $calendar_date_reports->where('reports.user_id', $showReportForUser);
             $fir_documents_reports = $fir_documents_reports->where('reports.user_id', $showReportForUser);
         }
@@ -3978,6 +4019,8 @@ tr { page-break-inside: avoid; }
             $languages = $languages->whereIn('reports.team_id', $teamIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.team_id', $teamIdArr);
             $followup_reports = $followup_reports->whereIn('reports.team_id', $teamIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.team_id', $teamIdArr);
+            
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.team_id', $teamIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.team_id', $teamIdArr);
             $users = $users->whereIn('reports.team_id', $teamIdArr);
@@ -3992,6 +4035,7 @@ tr { page-break-inside: avoid; }
             $languages = $languages->whereIn('reports.module_id', $moduleIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.module_id', $moduleIdArr);
             $followup_reports = $followup_reports->whereIn('reports.module_id', $moduleIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.module_id', $moduleIdArr);
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.module_id', $moduleIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.module_id', $moduleIdArr);
             $users = $users->whereIn('reports.module_id', $moduleIdArr);
@@ -4006,6 +4050,7 @@ tr { page-break-inside: avoid; }
             $languages = $languages->whereIn('reports.chapter_id', $chapterIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.chapter_id', $chapterIdArr);
             $followup_reports = $followup_reports->whereIn('reports.chapter_id', $chapterIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.chapter_id', $chapterIdArr);
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.chapter_id', $chapterIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.chapter_id', $chapterIdArr);
             $users = $users->whereIn('reports.chapter_id', $chapterIdArr);
@@ -4019,6 +4064,7 @@ tr { page-break-inside: avoid; }
             $languages = $languages->whereIn('reports.location_id', $locationIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.location_id', $locationIdArr);
             $followup_reports = $followup_reports->whereIn('reports.location_id', $locationIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.location_id', $locationIdArr);
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.location_id', $locationIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.location_id', $locationIdArr);
             $users = $users->whereIn('reports.location_id', $locationIdArr);
@@ -4031,6 +4077,7 @@ tr { page-break-inside: avoid; }
             $languages = $languages->whereIn('reports.location_state_id', $locationStateIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.location_state_id', $locationStateIdArr);
             $followup_reports = $followup_reports->whereIn('reports.location_state_id', $locationStateIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.location_state_id', $locationStateIdArr);
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.location_state_id', $locationStateIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.location_state_id', $locationStateIdArr);
             $users = $users->whereIn('reports.location_state_id', $locationStateIdArr);
@@ -4042,7 +4089,7 @@ tr { page-break-inside: avoid; }
             $total_reports = $total_reports->whereIn('reports.language_id', $languageIdArr);
             $languages = $languages->whereIn('reports.language_id', $languageIdArr);
             $first_time_reports = $first_time_reports->whereIn('reports.language_id', $languageIdArr);
-            $followup_reports = $followup_reports->whereIn('reports.language_id', $languageIdArr);
+            $videolink_reports = $videolink_reports->whereIn('reports.language_id', $languageIdArr);
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.language_id', $languageIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.language_id', $languageIdArr);
             $users = $users->whereIn('reports.language_id', $languageIdArr);
@@ -4055,6 +4102,7 @@ tr { page-break-inside: avoid; }
             $locationStates = $locationStates->whereBetween('reports.publish_at', [$from, $to]);
             $first_time_reports = $first_time_reports->whereBetween('reports.publish_at', [$from, $to]);
             $followup_reports = $followup_reports->whereBetween('reports.publish_at', [$from, $to]);
+            $videolink_reports = $videolink_reports->whereBetween('reports.publish_at', [$from, $to]);
             $calendar_date_reports = $calendar_date_reports->whereBetween('reports.publish_at', [$from, $to]);
             $fir_documents_reports = $fir_documents_reports->whereBetween('reports.publish_at', [$from, $to]);
             $users = $users->whereBetween('reports.publish_at', [$from, $to]);
@@ -4087,6 +4135,7 @@ tr { page-break-inside: avoid; }
 
         $first_time_reports = $first_time_reports->get();
         $followup_reports = $followup_reports->get();
+        $videolink_reports = $videolink_reports->get();
         $calendar_date_reports = $calendar_date_reports->get();
         $fir_documents_reports = $fir_documents_reports->get();
 
@@ -4119,6 +4168,7 @@ tr { page-break-inside: avoid; }
 
         $data['first_time_reports'] = $first_time_reports;
         $data['followup_reports'] = $followup_reports;
+        $data['videolink_reports'] = $videolink_reports;
         $data['calendar_date_reports'] = $calendar_date_reports;
         $data['fir_documents_reports'] = $fir_documents_reports;
 
