@@ -615,7 +615,7 @@ class DownloadController extends Controller
         }
 
 
-         if (!empty($request->videolink)) {
+        if (!empty($request->videolink)) {
             $videolink = $request->videolink;
             $data = $data->where('has_videolink', $videolink);
             $dataModule = $dataModule->where('has_videolink', $videolink);
@@ -1261,7 +1261,7 @@ class DownloadController extends Controller
                 $news->where('reports.has_followup', $request->followup);
             }
 
-             if (!empty($request->videolink)) {
+            if (!empty($request->videolink)) {
                 $news->where('reports.has_videolink', $request->videolink);
             }
 
@@ -2466,7 +2466,7 @@ tr { page-break-inside: avoid; }
             $dataAllTeamReport = $dataAllTeamReport->where('has_followup', $followup);
         }
 
-         if (!empty($request->videolink)) {
+        if (!empty($request->videolink)) {
             $videolink = $request->videolink;
             $data = $data->where('has_videolink', $videolink);
             $dataAllTeamReport = $dataAllTeamReport->where('has_videolink', $videolink);
@@ -2959,7 +2959,7 @@ tr { page-break-inside: avoid; }
             'dailyPopupDate' => $dailyPopupDate,
             'calendar_date' => $calendate_date_new,
             'zihad' => $loveZihad,
-            'repcount' => isset($news) ? count($news) : 0,
+            'repcount' => isset($news) && method_exists($news, 'total') ? $news->total() : count($news),
 
         ];
 
@@ -3968,7 +3968,7 @@ tr { page-break-inside: avoid; }
             ->where('reports.has_followup', 1)
             ->where('reports.active', 1);
 
-            $videolink_reports = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'))
+        $videolink_reports = Report::select(DB::connection('setfacts')->raw('COUNT(DISTINCT reports.id) as total_reports'))
             ->whereNull('reports.deleted_at')
             ->where('reports.is_deleted', 0)
             ->where('reports.has_videolink', 1)
@@ -4020,7 +4020,7 @@ tr { page-break-inside: avoid; }
             $first_time_reports = $first_time_reports->whereIn('reports.team_id', $teamIdArr);
             $followup_reports = $followup_reports->whereIn('reports.team_id', $teamIdArr);
             $videolink_reports = $videolink_reports->whereIn('reports.team_id', $teamIdArr);
-            
+
             $calendar_date_reports = $calendar_date_reports->whereIn('reports.team_id', $teamIdArr);
             $fir_documents_reports = $fir_documents_reports->whereIn('reports.team_id', $teamIdArr);
             $users = $users->whereIn('reports.team_id', $teamIdArr);
