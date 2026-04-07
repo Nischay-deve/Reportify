@@ -2902,7 +2902,7 @@ tr { page-break-inside: avoid; }
             $fromFormated = \Carbon\Carbon::createFromTimestamp(strtotime($to))->format('M d, Y');
             $reportTitle = $fromFormated . " | " . ucwords(strtolower($teamName->name)) . " | Daily Report";
         }
-        // dd($news);
+        // dd($news['total']);
 
         // dd($calendar_date);
 
@@ -2959,11 +2959,11 @@ tr { page-break-inside: avoid; }
             'dailyPopupDate' => $dailyPopupDate,
             'calendar_date' => $calendate_date_new,
             'zihad' => $loveZihad,
-            'repcount' => isset($news) && method_exists($news, 'total') ? $news->total() : count($news),
+            'repcount' => $repcount
 
         ];
 
-        // dd($reportParams);        
+        // dd($reportParams['repcount']);        
 
         // $news = $reportParams['keyNews']; // your paginator
 
