@@ -3156,7 +3156,7 @@ tr { page-break-inside: avoid; }
 
                 // Save Excel
                 $fileName = $downloadFileName . '.xlsx';
-                $filePath = storage_path(config('app.tempDir') . "/" . $fileName);
+                $filePath = storage_path(config('app.download_report_base_folder') . "/" . $fileName);
 
                 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
                 try {
@@ -3476,7 +3476,7 @@ tr { page-break-inside: avoid; }
                 $mpdf->WriteHTML(View::make('report.mpdf_allteam_footer', $reportParams)->render());
 
                 $fileName = $downloadFileName . '.pdf';
-                $mpdf->Output(storage_path(config('app.tempDir') . "/" . $fileName), 'F');
+                $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
 
                 return $fileName;
             }
