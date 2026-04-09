@@ -1605,17 +1605,24 @@ class DownloadController extends Controller
 
                 return $fileName;
             } else if ($reportType == 'pdf_desc') {
-                $defaultConfig = (new ConfigVariables())->getDefaults();
+                $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
                 $fontDirs = $defaultConfig['fontDir'];
 
-                $defaultFontConfig = (new FontVariables())->getDefaults();
+                $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
                 $fontData = $defaultFontConfig['fontdata'];
+
+                // Ensure mPDF temp directory exists
+                $mpdfTempDir = storage_path('app/mpdf-temp');
+                if (!file_exists($mpdfTempDir)) {
+                    mkdir($mpdfTempDir, 0775, true);
+                }
 
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'default_font' => 'notosansdevanagari',
+                    'tempDir' => $mpdfTempDir,
                     'fontDir' => array_merge($fontDirs, [
-                        resource_path('fonts'), // 👈 now pointing to your new folder
+                        resource_path('fonts'),
                     ]),
                     'fontdata' => $fontData + [
                         'notosansdevanagari' => [
@@ -1626,95 +1633,104 @@ class DownloadController extends Controller
                 ]);
 
                 $html = '
-<style>
-table { border-collapse: collapse; font-size: 12px; width: 100%; }
-th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
-td img { border: 1px solid #ccc; border-radius: 4px; margin: 2px; max-width: 120px; max-height: 120px; }
-ul { margin: 0; padding-left: 18px; }
-tr { page-break-inside: avoid; }
-</style>
+    <style>
+        table { border-collapse: collapse; font-size: 12px; width: 100%; }
+        th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
+        td img { border: 1px solid #ccc; border-radius: 4px; margin: 2px; max-width: 120px; max-height: 120px; }
+        ul { margin: 0; padding-left: 18px; }
+        tr { page-break-inside: avoid; }
+    </style>
 
-<table>
-    <thead>
-        <tr>
-            <th width="5%">S.No</th>
-            <th width="25%">Headline</th>
-            <th width="15%">Location</th>
-            <th width="25%">Screenshots</th>
-            <th width="30%">Descriptions</th>
-        </tr>
-    </thead>
-    <tbody>
-';
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">S.No</th>
+                <th width="25%">Headline</th>
+                <th width="15%">Location</th>
+                <th width="25%">Screenshots</th>
+                <th width="30%">Descriptions</th>
+            </tr>
+        </thead>
+        <tbody>
+    ';
 
                 foreach ($news as $reports) {
-                    $serial = $reports['serial_number'];
-                    $heading = $reports['heading'];
-                    $source  = $reports['source'];
-                    $date    = Carbon\Carbon::parse($reports['publish_at'])->format('d/m/Y');
-                    $location = $reports['location_name'] ?? 'N/A';
+                    $serial = $reports['serial_number'] ?? '';
+                    $heading = e($reports['heading'] ?? '');
+                    $source = e($reports['source'] ?? '');
+                    $date = !empty($reports['publish_at'])
+                        ? \Carbon\Carbon::parse($reports['publish_at'])->format('d/m/Y')
+                        : '';
+                    $location = e($reports['location_name'] ?? 'N/A');
                     $keypoints = $reports['calendar_date_description'] ?? [];
 
                     // Screenshots
                     $frontScreenshot = $reports['news_screenshot'] ?? null;
-
                     $screenshotHtml = '';
 
                     if ($frontScreenshot) {
-                        $src = Helper::getImageUrl($frontScreenshot); // Use your helper to get full URL
-                        // dd($src);
-                        if ($src) {
-                            $screenshotHtml .= '<img src="' . $src . '" style="max-width:48%; max-height:180px; margin-right:2%;" />';
+                        $src = \Helper::getImageUrl($frontScreenshot);
+                        if (!empty($src)) {
+                            $screenshotHtml .= '<img src="' . e($src) . '" style="max-width:48%; max-height:180px; margin-right:2%;" />';
                         }
                     }
 
-                    if (!$screenshotHtml) $screenshotHtml = 'N/A';
-
+                    if (empty($screenshotHtml)) {
+                        $screenshotHtml = 'N/A';
+                    }
 
                     if (is_string($keypoints)) {
-                        // If it's a string, split it into lines or by | if that's your separator
                         $keypoints = preg_split('/\r\n|\r|\n|\|/', $keypoints);
                     }
 
-                    // If it’s still not an array, make it an empty array
                     if (!is_array($keypoints)) {
                         $keypoints = [];
                     }
 
-                    // Now you can safely loop
                     $pointsHtml = '';
                     if (!empty($keypoints)) {
                         $pointsHtml .= '<ul>';
                         foreach ($keypoints as $point) {
-                            $point = trim($point);
-                            if ($point) {
-                                $pointsHtml .= '<li>' . $point . '</li>';
+                            $point = trim(strip_tags($point));
+                            if ($point !== '') {
+                                $pointsHtml .= '<li>' . e($point) . '</li>';
                             }
                         }
                         $pointsHtml .= '</ul>';
+
+                        if ($pointsHtml === '<ul></ul>') {
+                            $pointsHtml = 'N/A';
+                        }
                     } else {
                         $pointsHtml = 'N/A';
                     }
 
                     $html .= '
-        <tr>
-            <td align="center">' . $serial . '</td>
-            <td><b>' . $heading . '</b><br>(' . $source . ', ' . $date . ')</td>
-            <td>' . $location . '</td>
-            <td>' . $screenshotHtml . '</td>
-            <td>' . $pointsHtml . '</td>
-        </tr>
-    ';
+            <tr>
+                <td align="center">' . $serial . '</td>
+                <td><b>' . $heading . '</b><br>(' . $source . ', ' . $date . ')</td>
+                <td>' . $location . '</td>
+                <td>' . $screenshotHtml . '</td>
+                <td>' . $pointsHtml . '</td>
+            </tr>
+        ';
                 }
 
                 $html .= '</tbody></table>';
 
-                // Write PDF
                 $mpdf->WriteHTML($html);
 
+                $downloadDir = storage_path(config('app.download_report_base_folder'));
+                if (!file_exists($downloadDir)) {
+                    mkdir($downloadDir, 0775, true);
+                }
+
                 $fileName = $downloadFileName . '_keypoints_final.pdf';
-                $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
+                $filePath = $downloadDir . '/' . $fileName;
+
+                $mpdf->Output($filePath, 'F');
+
                 return $fileName;
             } else 
          if ($reportType == "lovezihad") {
@@ -1875,7 +1891,15 @@ tr { page-break-inside: avoid; }
                 ///////////////////////////////
 
                 // new approach Feb 16
-                $mpdf = new \Mpdf\Mpdf();
+                $mpdfTempDir = storage_path('app/mpdf-temp');
+
+                if (!file_exists($mpdfTempDir)) {
+                    mkdir($mpdfTempDir, 0775, true);
+                }
+
+                $mpdf = new \Mpdf\Mpdf([
+                    'tempDir' => $mpdfTempDir
+                ]);
 
                 //write header
                 $view_content_mpdfview_header = View::make('report.mpdf.header', $reportParams)->render();
@@ -3167,17 +3191,28 @@ tr { page-break-inside: avoid; }
 
                 return $fileName;
             } else if ($reportType == 'pdf_desc') {
-                $defaultConfig = (new ConfigVariables())->getDefaults();
+                $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
                 $fontDirs = $defaultConfig['fontDir'];
 
-                $defaultFontConfig = (new FontVariables())->getDefaults();
+                $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
                 $fontData = $defaultFontConfig['fontdata'];
+
+                $mpdfTempDir = storage_path('app/mpdf-temp');
+                if (!file_exists($mpdfTempDir)) {
+                    mkdir($mpdfTempDir, 0775, true);
+                }
+
+                $downloadDir = storage_path(config('app.download_report_base_folder'));
+                if (!file_exists($downloadDir)) {
+                    mkdir($downloadDir, 0775, true);
+                }
 
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'default_font' => 'notosansdevanagari',
+                    'tempDir' => $mpdfTempDir,
                     'fontDir' => array_merge($fontDirs, [
-                        resource_path('fonts'), // 👈 now pointing to your new folder
+                        resource_path('fonts'),
                     ]),
                     'fontdata' => $fontData + [
                         'notosansdevanagari' => [
@@ -3188,95 +3223,98 @@ tr { page-break-inside: avoid; }
                 ]);
 
                 $html = '
-<style>
-table { border-collapse: collapse; font-size: 12px; width: 100%; }
-th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
-td img { border: 1px solid #ccc; border-radius: 4px; margin: 2px; max-width: 120px; max-height: 120px; }
-ul { margin: 0; padding-left: 18px; }
-tr { page-break-inside: avoid; }
-</style>
+    <style>
+        table { border-collapse: collapse; font-size: 12px; width: 100%; }
+        th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+        th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
+        td img { border: 1px solid #ccc; border-radius: 4px; margin: 2px; max-width: 120px; max-height: 120px; }
+        ul { margin: 0; padding-left: 18px; }
+        tr { page-break-inside: avoid; }
+    </style>
 
-<table>
-    <thead>
-        <tr>
-            <th width="5%">S.No</th>
-            <th width="25%">Headline</th>
-            <th width="15%">Location</th>
-            <th width="25%">Screenshots</th>
-            <th width="30%">Descriptions</th>
-        </tr>
-    </thead>
-    <tbody>
-';
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">S.No</th>
+                <th width="25%">Headline</th>
+                <th width="15%">Location</th>
+                <th width="25%">Screenshots</th>
+                <th width="30%">Descriptions</th>
+            </tr>
+        </thead>
+        <tbody>
+    ';
 
                 foreach ($news as $reports) {
-                    $serial = $reports['serial_number'];
-                    $heading = $reports['heading'];
-                    $source  = $reports['source'];
-                    $date    = Carbon\Carbon::parse($reports['publish_at'])->format('d/m/Y');
+                    $serial = $reports['serial_number'] ?? '';
+                    $heading = $reports['heading'] ?? '';
+                    $source = $reports['source'] ?? '';
+                    $date = !empty($reports['publish_at'])
+                        ? \Carbon\Carbon::parse($reports['publish_at'])->format('d/m/Y')
+                        : '';
                     $location = $reports['location_name'] ?? 'N/A';
                     $keypoints = $reports['calendar_date_description'] ?? [];
 
-                    // Screenshots
                     $frontScreenshot = $reports['news_screenshot'] ?? null;
-
                     $screenshotHtml = '';
 
                     if ($frontScreenshot) {
-                        $src = Helper::getImageUrl($frontScreenshot); // Use your helper to get full URL
-                        // dd($src);
-                        if ($src) {
-                            $screenshotHtml .= '<img src="' . $src . '" style="max-width:48%; max-height:180px; margin-right:2%;" />';
+                        $src = Helper::getImageUrl($frontScreenshot);
+                        if (!empty($src)) {
+                            $screenshotHtml .= '<img src="' . e($src) . '" style="max-width:48%; max-height:180px; margin-right:2%;" />';
                         }
                     }
 
-                    if (!$screenshotHtml) $screenshotHtml = 'N/A';
-
+                    if (empty($screenshotHtml)) {
+                        $screenshotHtml = 'N/A';
+                    }
 
                     if (is_string($keypoints)) {
-                        // If it's a string, split it into lines or by | if that's your separator
                         $keypoints = preg_split('/\r\n|\r|\n|\|/', $keypoints);
                     }
 
-                    // If it’s still not an array, make it an empty array
                     if (!is_array($keypoints)) {
                         $keypoints = [];
                     }
 
-                    // Now you can safely loop
                     $pointsHtml = '';
                     if (!empty($keypoints)) {
                         $pointsHtml .= '<ul>';
                         foreach ($keypoints as $point) {
-                            $point = trim($point);
-                            if ($point) {
-                                $pointsHtml .= '<li>' . $point . '</li>';
+                            $point = trim(strip_tags($point));
+                            if ($point !== '') {
+                                $pointsHtml .= '<li>' . e($point) . '</li>';
                             }
                         }
                         $pointsHtml .= '</ul>';
+
+                        if ($pointsHtml === '<ul></ul>') {
+                            $pointsHtml = 'N/A';
+                        }
                     } else {
                         $pointsHtml = 'N/A';
                     }
 
                     $html .= '
-        <tr>
-            <td align="center">' . $serial . '</td>
-            <td><b>' . $heading . '</b><br>(' . $source . ', ' . $date . ')</td>
-            <td>' . $location . '</td>
-            <td>' . $screenshotHtml . '</td>
-            <td>' . $pointsHtml . '</td>
-        </tr>
-    ';
+            <tr>
+                <td align="center">' . e((string) $serial) . '</td>
+                <td><b>' . e($heading) . '</b><br>(' . e($source) . ', ' . e($date) . ')</td>
+                <td>' . e($location) . '</td>
+                <td>' . $screenshotHtml . '</td>
+                <td>' . $pointsHtml . '</td>
+            </tr>
+        ';
                 }
 
                 $html .= '</tbody></table>';
 
-                // Write PDF
                 $mpdf->WriteHTML($html);
 
                 $fileName = $downloadFileName . '_keypoints_final.pdf';
-                $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
+                $filePath = $downloadDir . '/' . $fileName;
+
+                $mpdf->Output($filePath, 'F');
+
                 return $fileName;
             } else 
            if ($reportType == "lovezihad") {
@@ -3416,7 +3454,6 @@ tr { page-break-inside: avoid; }
                     ], 500);
                 }
             } else {
-
                 // prevent pcre crash on large reports
                 @ini_set('pcre.backtrack_limit', '5000000');
                 @ini_set('pcre.recursion_limit', '500000');
@@ -3427,6 +3464,18 @@ tr { page-break-inside: avoid; }
                 $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
                 $fontData = $defaultFontConfig['fontdata'];
 
+                // mPDF temp directory
+                $mpdfTempDir = storage_path('app/mpdf-temp');
+                if (!file_exists($mpdfTempDir)) {
+                    mkdir($mpdfTempDir, 0775, true);
+                }
+
+                // PDF download directory
+                $downloadDir = storage_path(config('app.download_report_base_folder'));
+                if (!file_exists($downloadDir)) {
+                    mkdir($downloadDir, 0775, true);
+                }
+
                 $mpdf = new \Mpdf\Mpdf([
                     'mode' => 'utf-8',
                     'format' => 'A4',
@@ -3436,12 +3485,14 @@ tr { page-break-inside: avoid; }
                     'margin_top'    => 20,
                     'margin_bottom' => 20,
 
-                    // ✅ your actual TTF folder
+                    'tempDir' => $mpdfTempDir,
+
+                    // your actual TTF folder
                     'fontDir' => array_merge($fontDirs, [
                         base_path('public/fonts/Hind'),
                     ]),
 
-                    // ✅ register Hind font
+                    // register Hind font
                     'fontdata' => $fontData + [
                         'hind' => [
                             'R' => 'Hind-Regular.ttf',
@@ -3449,10 +3500,10 @@ tr { page-break-inside: avoid; }
                         ],
                     ],
 
-                    // ✅ force default font to Hind (Hindi supported)
+                    // force default font to Hind
                     'default_font' => 'hind',
 
-                    // ✅ helps mixed English + Hindi
+                    // helps mixed English + Hindi
                     'autoScriptToLang' => true,
                     'autoLangToFont'   => true,
                     'useSubstitutions' => true,
@@ -3460,10 +3511,12 @@ tr { page-break-inside: avoid; }
 
                 $mpdf->SetAutoPageBreak(true, 20);
 
-                // 1) header + index
-                $mpdf->WriteHTML(View::make('report.mpdf_allteam_header', $reportParams)->render());
+                // 1) header
+                $mpdf->WriteHTML(
+                    View::make('report.mpdf_allteam_header', $reportParams)->render()
+                );
 
-                // 2) each news item as chunk (avoids pcre.backtrack_limit crash)
+                // 2) each news item as chunk
                 foreach ($reportParams['keyNews'] as $reports) {
                     $mpdf->WriteHTML(
                         View::make('report.mpdf_allteam_item', array_merge($reportParams, [
@@ -3473,10 +3526,14 @@ tr { page-break-inside: avoid; }
                 }
 
                 // 3) footer
-                $mpdf->WriteHTML(View::make('report.mpdf_allteam_footer', $reportParams)->render());
+                $mpdf->WriteHTML(
+                    View::make('report.mpdf_allteam_footer', $reportParams)->render()
+                );
 
                 $fileName = $downloadFileName . '.pdf';
-                $mpdf->Output(storage_path(config('app.download_report_base_folder') . "/" . $fileName), 'F');
+                $filePath = $downloadDir . '/' . $fileName;
+
+                $mpdf->Output($filePath, 'F');
 
                 return $fileName;
             }
