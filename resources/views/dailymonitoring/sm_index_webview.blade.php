@@ -169,7 +169,106 @@
                                 </div>
                                 --}}
                             </div>
-                            
+
+                            {{-- ============================================================
+                                 INDEX TABLE (same structure / style as the table rendered
+                                 by pdfview() -> report/webview_viewreport.blade.php).
+                                 Shows: report heading + a single index table of
+                                 Module -> Chapter counts.
+                                 ============================================================ --}}
+                            @php
+                                $dataChapters = [];
+
+                                foreach ($all_items_sm_cal as $smItem) {
+                                    if (!empty($smItem->chapter_id)) {
+                                        $cid = $smItem->chapter_id;
+                                        if (!isset($dataChapters[$cid])) {
+                                            $dataChapters[$cid] = [
+                                                'chapter' => [
+                                                    'id'   => $cid,
+                                                    'name' => $smItem->chapter_name,
+                                                ],
+                                                'module_name'   => $smItem->module_name ?? '',
+                                                'chapter_count' => 0,
+                                            ];
+                                        }
+                                        $dataChapters[$cid]['chapter_count']++;
+                                    }
+                                }
+
+                                $dataChapters = array_values($dataChapters);
+                            @endphp
+
+                            <div class="col-md-12 col-xl-12">
+                                <div class="table-responsive">
+                                    <div class="dataTables_wrapper dt-bootstrap4 no-footer">
+                                        <div class="row">
+
+                                            {{-- REPORT HEADING --}}
+                                            <table class="tableStyleHeading" cellspacing="0" cellpadding="2"
+                                                style="text-align: center; width:100%;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td style="text-align: center; font-size: 16px; font-weight:bold; padding:12px;">
+                                                            {{ $selectedDate }} - SM Monitoring Report
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+
+                                            {{-- INDEX TABLE  --}}
+                                            @if (count($dataChapters) > 0)
+                                                <table class="tableStyle" border="1" cellspacing="0" cellpadding="2"
+                                                    width="100%"
+                                                    style="border: 1px solid black; border-collapse: collapse; margin-top:10px;">
+                                                    <tbody>
+
+                                                        {{-- Column header row : # | Topic (yellow) | News Count (blue) --}}
+                                                        <tr>
+                                                            <td style="background-color: #f2f2f2; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                                width="10%">
+                                                                #
+                                                            </td>
+                                                            <td style="background-color: #FFC000; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                                width="70%">
+                                                                Topic
+                                                            </td>
+                                                            <td style="background-color: #d9e2f3; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                                width="20%">
+                                                                News Count ({{ $count_sm }})
+                                                            </td>
+                                                        </tr>
+
+                                                        {{-- Data rows : # | Module -> Chapter | Count --}}
+                                                        @foreach ($dataChapters as $key => $datas)
+                                                            <tr>
+                                                                <td style="border: 1px solid #000000; text-align: center; padding:6px;"
+                                                                    width="10%">
+                                                                    {{ $key + 1 }}
+                                                                </td>
+                                                                <td style="border: 1px solid #000000; text-align: left; padding:6px;"
+                                                                    width="70%" align="left">
+                                                                    @if (!empty($datas['module_name']))
+                                                                        {{ $datas['module_name'] }} ->
+                                                                    @endif
+                                                                    {{ $datas['chapter']['name'] }}
+                                                                </td>
+                                                                <td style="border: 1px solid #000000; text-align: center; padding:6px;"
+                                                                    width="20%">
+                                                                    {{ $datas['chapter_count'] }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+
+                                                    </tbody>
+                                                </table>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-12 col-xl-12">
                                 <section class="light">
                                     <div class="container-fluid py-2 mt-3">

@@ -168,43 +168,124 @@ $paginationLinks = $keyNews->links()->render();
 
                                     {{-- TEAM HEADING INDEX --}}
                                     @if ($show_index)
-                                    <table class="tableStyle" border="1" cellspacing="0" cellpadding="2"
-                                        width="100%" style="border: 1px solid black;">
-                                        <tbody>
+                                        @php
+                                            // Build the chapter index.  Prefer the controller-supplied
+                                            // $data (which is queried over the entire dataset, not a
+                                            // single paginated page).  If it is empty / unreliable,
+                                            // fall back to aggregating $keyNews directly so the
+                                            // table is never blank when there are visible items.
+                                            $computedChapters = [];
 
-                                            @foreach ($dataAllTeamReport as $key => $teamData)
-                                            <tr>
-                                                <td colspan="2" style="background-color: #FFC000; color: #000000; text-align: center;"
-                                                    width="70%">{{ $teamData['team']['name'] }}</td>
-                                                <td style="background-color: #d9e2f3; color: #000000; text-align: center;"
-                                                    width="20%">News Count ({{ $teamData['team_count'] }})</td>
-                                            </tr>
+                                            // 1) Try $data first
+                                            if (!empty($data)) {
+                                                foreach ($data as $datas) {
+                                                    $chapterId = data_get($datas, 'chapter_id');
+                                                    if (empty($chapterId)) {
+                                                        continue;
+                                                    }
+                                                    $chapterName  = data_get($datas, 'chapter.name');
+                                                    $moduleName   = (isset($moduleNameArr) && isset($moduleNameArr[$chapterId]))
+                                                        ? $moduleNameArr[$chapterId]
+                                                        : data_get($datas, 'module.name');
+                                                    $chapterCount = (int) data_get($datas, 'chapter_count', 0);
 
+                                                    $computedChapters[$chapterId] = [
+                                                        'chapter_name'  => $chapterName,
+                                                        'module_name'   => $moduleName,
+                                                        'chapter_count' => $chapterCount,
+                                                    ];
+                                                }
+                                            }
 
-                                            @endforeach
+                                            // 2) Fallback: aggregate from $keyNews
+                                            $totalNewsCount = 0;
+                                            $iterableNews   = $keyNews;
+                                            if (is_object($keyNews) && method_exists($keyNews, 'getCollection')) {
+                                                $iterableNews = $keyNews->getCollection();
+                                            }
+                                            if (empty($computedChapters) && is_iterable($iterableNews)) {
+                                                foreach ($iterableNews as $newsItem) {
+                                                    $totalNewsCount++;
+                                                    $chapterId   = data_get($newsItem, 'chapter_id');
+                                                    $chapterName = data_get($newsItem, 'chapter.name');
+                                                    $moduleName  = data_get($newsItem, 'module.name');
 
-                                            @foreach ($data as $key => $datas)
-                                            @php
-                                            // dd($datas);
-                                            @endphp
-                                            <tr>
-                                                <td style="border: 1px solid #000000; text-align: center;"
-                                                    width="10%">{{ $key + 1 }}</td>
-                                                <td style="border: 1px solid #000000; text-align: left;"
-                                                    width="70%" align="left">
-                                                    @if (isset($datas['chapter']['id']))
-                                                    {{ $moduleNameArr[$datas['chapter']['id']] }} ->
-                                                    {{ $datas['chapter']['name'] }}
-                                                    @endif
-                                                </td>
-                                                <td style="border: 1px solid #000000; text-align: center;"
-                                                    width="20%">
-                                                    {{ $datas['chapter_count'] }}
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                                    if (empty($chapterId)) {
+                                                        continue;
+                                                    }
+                                                    if (!isset($computedChapters[$chapterId])) {
+                                                        $computedChapters[$chapterId] = [
+                                                            'chapter_name'  => $chapterName,
+                                                            'module_name'   => $moduleName,
+                                                            'chapter_count' => 0,
+                                                        ];
+                                                    }
+                                                    $computedChapters[$chapterId]['chapter_count']++;
+                                                }
+                                            }
+                                            $computedChapters = array_values($computedChapters);
+
+                                            // Header total: prefer team-level sum if available,
+                                            // otherwise fall back to per-chapter sum, otherwise raw count.
+                                            $headerNewsCount = 0;
+                                            if (!empty($dataAllTeamReport)) {
+                                                foreach ($dataAllTeamReport as $teamData) {
+                                                    $headerNewsCount += (int) data_get($teamData, 'team_count', 0);
+                                                }
+                                            }
+                                            if ($headerNewsCount === 0 && !empty($computedChapters)) {
+                                                foreach ($computedChapters as $ch) {
+                                                    $headerNewsCount += (int) $ch['chapter_count'];
+                                                }
+                                            }
+                                            if ($headerNewsCount === 0) {
+                                                $headerNewsCount = $totalNewsCount;
+                                            }
+                                        @endphp
+
+                                        <table class="tableStyle" border="1" cellspacing="0" cellpadding="2"
+                                            width="100%" style="border: 1px solid black; border-collapse: collapse;">
+                                            <tbody>
+
+                                                {{-- Column header row : # | Topic (yellow) | News Count (blue) --}}
+                                                <tr>
+                                                    <td style="background-color: #f2f2f2; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                        width="10%">
+                                                        #
+                                                    </td>
+                                                    <td style="background-color: #FFC000; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                        width="70%">
+                                                        Topic
+                                                    </td>
+                                                    <td style="background-color: #d9e2f3; color: #000000; text-align: center; border:1px solid #000000; padding:10px; font-weight:bold;"
+                                                        width="20%">
+                                                        News Count ({{ $headerNewsCount }})
+                                                    </td>
+                                                </tr>
+
+                                                {{-- Data rows : # | Module -> Chapter | Count --}}
+                                                @foreach ($computedChapters as $key => $datas)
+                                                    <tr>
+                                                        <td style="border: 1px solid #000000; text-align: center; padding:6px;"
+                                                            width="10%">
+                                                            {{ $key + 1 }}
+                                                        </td>
+                                                        <td style="border: 1px solid #000000; text-align: left; padding:6px;"
+                                                            width="70%" align="left">
+                                                            @if (!empty($datas['module_name']))
+                                                                {{ $datas['module_name'] }} ->
+                                                            @endif
+                                                            {{ $datas['chapter_name'] }}
+                                                        </td>
+                                                        <td style="border: 1px solid #000000; text-align: center; padding:6px;"
+                                                            width="20%">
+                                                            {{ $datas['chapter_count'] }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                            </tbody>
+                                        </table>
                                     @endif
 
                                     @php
