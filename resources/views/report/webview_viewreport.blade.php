@@ -174,22 +174,28 @@ $paginationLinks = $keyNews->links()->render();
                                             // single paginated page).  If it is empty / unreliable,
                                             // fall back to aggregating $keyNews directly so the
                                             // table is never blank when there are visible items.
+                                            //
+                                            // Items WITH a subcategory  (chapter) -> grouped per chapter
+                                            // Items WITHOUT a subcategory         -> grouped per module
+                                            // Items WITHOUT either                -> grouped as one "Uncategorized" row
                                             $computedChapters = [];
 
                                             // 1) Try $data first
                                             if (!empty($data)) {
                                                 foreach ($data as $datas) {
-                                                    $chapterId = data_get($datas, 'chapter_id');
-                                                    if (empty($chapterId)) {
-                                                        continue;
-                                                    }
+                                                    $chapterId    = data_get($datas, 'chapter_id');
+                                                    $moduleId     = data_get($datas, 'module_id');
                                                     $chapterName  = data_get($datas, 'chapter.name');
-                                                    $moduleName   = (isset($moduleNameArr) && isset($moduleNameArr[$chapterId]))
-                                                        ? $moduleNameArr[$chapterId]
-                                                        : data_get($datas, 'module.name');
+                                                    $moduleName   = data_get($datas, 'module.name');
+                                                    if (empty($moduleName) && !empty($chapterId)
+                                                        && isset($moduleNameArr) && isset($moduleNameArr[$chapterId])) {
+                                                        $moduleName = $moduleNameArr[$chapterId];
+                                                    }
                                                     $chapterCount = (int) data_get($datas, 'chapter_count', 0);
 
-                                                    $computedChapters[$chapterId] = [
+                                                    $groupKey = 'm' . ($moduleId ?? '0') . '_c' . ($chapterId ?? '0');
+
+                                                    $computedChapters[$groupKey] = [
                                                         'chapter_name'  => $chapterName,
                                                         'module_name'   => $moduleName,
                                                         'chapter_count' => $chapterCount,
@@ -207,20 +213,20 @@ $paginationLinks = $keyNews->links()->render();
                                                 foreach ($iterableNews as $newsItem) {
                                                     $totalNewsCount++;
                                                     $chapterId   = data_get($newsItem, 'chapter_id');
+                                                    $moduleId    = data_get($newsItem, 'module_id');
                                                     $chapterName = data_get($newsItem, 'chapter.name');
                                                     $moduleName  = data_get($newsItem, 'module.name');
 
-                                                    if (empty($chapterId)) {
-                                                        continue;
-                                                    }
-                                                    if (!isset($computedChapters[$chapterId])) {
-                                                        $computedChapters[$chapterId] = [
+                                                    $groupKey = 'm' . ($moduleId ?? '0') . '_c' . ($chapterId ?? '0');
+
+                                                    if (!isset($computedChapters[$groupKey])) {
+                                                        $computedChapters[$groupKey] = [
                                                             'chapter_name'  => $chapterName,
                                                             'module_name'   => $moduleName,
                                                             'chapter_count' => 0,
                                                         ];
                                                     }
-                                                    $computedChapters[$chapterId]['chapter_count']++;
+                                                    $computedChapters[$groupKey]['chapter_count']++;
                                                 }
                                             }
                                             $computedChapters = array_values($computedChapters);
@@ -265,6 +271,20 @@ $paginationLinks = $keyNews->links()->render();
 
                                                 {{-- Data rows : # | Module -> Chapter | Count --}}
                                                 @foreach ($computedChapters as $key => $datas)
+                                                    @php
+                                                        $rowModule  = $datas['module_name']  ?? '';
+                                                        $rowChapter = $datas['chapter_name'] ?? '';
+
+                                                        if (!empty($rowModule) && !empty($rowChapter)) {
+                                                            $rowLabel = $rowModule . ' -> ' . $rowChapter;
+                                                        } elseif (!empty($rowModule)) {
+                                                            $rowLabel = $rowModule;
+                                                        } elseif (!empty($rowChapter)) {
+                                                            $rowLabel = $rowChapter;
+                                                        } else {
+                                                            $rowLabel = 'Uncategorized';
+                                                        }
+                                                    @endphp
                                                     <tr>
                                                         <td style="border: 1px solid #000000; text-align: center; padding:6px;"
                                                             width="10%">
@@ -272,10 +292,7 @@ $paginationLinks = $keyNews->links()->render();
                                                         </td>
                                                         <td style="border: 1px solid #000000; text-align: left; padding:6px;"
                                                             width="70%" align="left">
-                                                            @if (!empty($datas['module_name']))
-                                                                {{ $datas['module_name'] }} ->
-                                                            @endif
-                                                            {{ $datas['chapter_name'] }}
+                                                            {{ $rowLabel }}
                                                         </td>
                                                         <td style="border: 1px solid #000000; text-align: center; padding:6px;"
                                                             width="20%">

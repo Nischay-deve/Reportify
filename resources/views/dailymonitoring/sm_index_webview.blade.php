@@ -177,23 +177,33 @@
                                  Module -> Chapter counts.
                                  ============================================================ --}}
                             @php
+                                // Aggregate items by (module_id, chapter_id) so that:
+                                //  - items WITH a subcategory (chapter) get grouped per chapter
+                                //  - items WITHOUT a subcategory still appear, grouped per module
+                                //  - items WITHOUT either still appear, grouped as "Uncategorized"
                                 $dataChapters = [];
 
                                 foreach ($all_items_sm_cal as $smItem) {
-                                    if (!empty($smItem->chapter_id)) {
-                                        $cid = $smItem->chapter_id;
-                                        if (!isset($dataChapters[$cid])) {
-                                            $dataChapters[$cid] = [
-                                                'chapter' => [
-                                                    'id'   => $cid,
-                                                    'name' => $smItem->chapter_name,
-                                                ],
-                                                'module_name'   => $smItem->module_name ?? '',
-                                                'chapter_count' => 0,
-                                            ];
-                                        }
-                                        $dataChapters[$cid]['chapter_count']++;
+                                    $moduleId   = $smItem->module_id  ?? null;
+                                    $chapterId  = $smItem->chapter_id ?? null;
+                                    $moduleName = $smItem->module_name  ?? '';
+                                    $chapterName = $smItem->chapter_name ?? '';
+
+                                    // Build a unique grouping key for this row.
+                                    $groupKey = 'm' . ($moduleId ?? '0') . '_c' . ($chapterId ?? '0');
+
+                                    if (!isset($dataChapters[$groupKey])) {
+                                        $dataChapters[$groupKey] = [
+                                            'chapter' => [
+                                                'id'   => $chapterId,
+                                                'name' => $chapterName,
+                                            ],
+                                            'module_id'     => $moduleId,
+                                            'module_name'   => $moduleName,
+                                            'chapter_count' => 0,
+                                        ];
                                     }
+                                    $dataChapters[$groupKey]['chapter_count']++;
                                 }
 
                                 $dataChapters = array_values($dataChapters);
@@ -241,6 +251,20 @@
 
                                                         {{-- Data rows : # | Module -> Chapter | Count --}}
                                                         @foreach ($dataChapters as $key => $datas)
+                                                            @php
+                                                                $rowModule  = $datas['module_name']      ?? '';
+                                                                $rowChapter = $datas['chapter']['name']  ?? '';
+
+                                                                if (!empty($rowModule) && !empty($rowChapter)) {
+                                                                    $rowLabel = $rowModule . ' -> ' . $rowChapter;
+                                                                } elseif (!empty($rowModule)) {
+                                                                    $rowLabel = $rowModule;
+                                                                } elseif (!empty($rowChapter)) {
+                                                                    $rowLabel = $rowChapter;
+                                                                } else {
+                                                                    $rowLabel = 'Uncategorized';
+                                                                }
+                                                            @endphp
                                                             <tr>
                                                                 <td style="border: 1px solid #000000; text-align: center; padding:6px;"
                                                                     width="10%">
@@ -248,10 +272,7 @@
                                                                 </td>
                                                                 <td style="border: 1px solid #000000; text-align: left; padding:6px;"
                                                                     width="70%" align="left">
-                                                                    @if (!empty($datas['module_name']))
-                                                                        {{ $datas['module_name'] }} ->
-                                                                    @endif
-                                                                    {{ $datas['chapter']['name'] }}
+                                                                    {{ $rowLabel }}
                                                                 </td>
                                                                 <td style="border: 1px solid #000000; text-align: center; padding:6px;"
                                                                     width="20%">
