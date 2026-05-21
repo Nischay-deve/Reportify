@@ -1,3 +1,4 @@
+@include('report_public_css')
 <style>
     .container {
         width: 100%;
@@ -117,9 +118,43 @@
         }
 
     @endmobile
+
+    /* ----------------------------------------------------------------------
+       SM cards: same typography as report_public_css (20px title, 16px body).
+       !important blocks editor inline styles from breaking the next card.
+       ---------------------------------------------------------------------- */
+    article.postcard {
+        font-size: 16px;
+    }
+
+    .postcard .postcard__title,
+    .postcard .postcard__title a {
+        font-size: 20px !important;
+        font-weight: 500 !important;
+        line-height: 1.2 !important;
+        color: inherit !important;
+    }
+
+    .postcard .postcard__preview-txt,
+    .postcard .postcard__preview-txt * {
+        font-size: 16px !important;
+        font-family: inherit !important;
+        line-height: 1.5 !important;
+        text-align: justify;
+    }
+
+    .postcard .postcard__preview-txt strong,
+    .postcard .postcard__preview-txt b {
+        font-weight: 700 !important;
+        font-size: 16px !important;
+    }
+
+    .postcard .postcard__preview-txt p {
+        margin-bottom: 0.5rem;
+    }
 </style>
 <div class="section" id="section1">
-    <h2 class="sticky-header">{{ $selectedDate }} - SM Monitoring Report ({{$count_sm}})</h2></h2>
+    <h2 class="sticky-header">{{ $selectedDate }} - SM Monitoring Report ({{$count_sm}})</h2>
 
     <a id="sm-daily-monitoring-report"></a>
     <div class="page-content">
@@ -413,8 +448,23 @@
 
                                                     <div class="postcard__bar postcard__bar_blue"></div>
 
-                                                    <div class="postcard__preview-txt">                                                                                
-                                                            {!! trim($item->description) !!}
+                                                    <div class="postcard__preview-txt">
+                                                            @php
+                                                                // Strip editor markup (span/font/size styles) so item 21
+                                                                // matches item 20 and cannot shrink the next card title.
+                                                                $allowedTags = implode('', array_map(
+                                                                    fn ($tag) => '<' . $tag . '>',
+                                                                    ['a', 'br', 'p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li']
+                                                                ));
+                                                                $safeDescription = strip_tags((string) $item->description, $allowedTags);
+                                                                $safeDescription = preg_replace(
+                                                                    '/\s+(style|class|id|face|size)\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i',
+                                                                    '',
+                                                                    $safeDescription
+                                                                );
+                                                                $safeDescription = preg_replace('/<\/?span[^>]*>/i', '', $safeDescription);
+                                                            @endphp
+                                                            {!! trim($safeDescription) !!}
                                                     </div>
 
                                                     @if (empty($find_more) && !empty($item->module_id))
