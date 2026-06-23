@@ -122,6 +122,7 @@ trait CommonMethodsTraits
             sm_calendar_masters
             join websites on websites.id = sm_calendar_masters.website_id         
             , reports
+            left join teams on teams.id = reports.team_id
             WHERE 
             sm_calendar_masters.id = reports.sm_calendar_master_id and
             sm_calendar_masters.active = 1 and
@@ -129,6 +130,7 @@ trait CommonMethodsTraits
             reports.id IS NOT NULL and 
             reports.active = 1 and 
             ISNULL(reports.deleted_at) and
+            (reports.team_id IS NULL OR teams.is_public = 1) and
             reports.publish_at = '" . $from . "'
             ORDER BY  reports.id asc       
         ";        

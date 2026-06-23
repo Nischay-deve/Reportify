@@ -5868,6 +5868,7 @@ class DownloadController extends Controller
         if ($issue) {
             $teamData = Team::select('teams.id', 'teams.name')
                 ->where('teams.slug', $issue)
+                ->where('teams.is_public', 1)
                 ->join('websites', 'websites.id', 'teams.website_id')
                 ->where('websites.domain', $slug)
                 ->get();
@@ -6180,7 +6181,8 @@ class DownloadController extends Controller
                 sm_calendar_masters.website_id in (" . $websiteIds . ") and                        
                 reports.id IS NOT NULL and 
                 reports.active = 1 and             
-                ISNULL(reports.deleted_at)
+                ISNULL(reports.deleted_at) and
+                (reports.team_id IS NULL OR teams.is_public = 1)
                 " . $date_condition_sm_cal . "
             ) AS allItems  
             ORDER BY id        
@@ -6218,7 +6220,7 @@ class DownloadController extends Controller
             teams.id,teams.name, teams.slug, count(reports.id) as totalReports
             FROM
                 teams
-            left join reports on reports.team_id = teams.id  and reports.publish_at between '" . $from . "' and '" . $to . "'        and ISNULL( reports.deleted_at)             and reports.active = 1   
+            left join reports on reports.team_id = teams.id  and reports.publish_at between '" . $from . "' and '" . $to . "'        and ISNULL( reports.deleted_at)             and reports.active = 1   AND reports.sm_calendar_master_id = 0
             WHERE 
             teams.active = 1 
             and teams.is_public = 1 
@@ -6236,7 +6238,9 @@ class DownloadController extends Controller
             $all_issues = DB::connection('setfacts')->select($allTeamSql);
             // dd($all_issues);
             foreach ($all_issues as $all_issue) {
-                $paramTeamId[] = $all_issue->slug;
+                if ($all_issue->totalReports > 0) {
+                    $paramTeamId[] = $all_issue->slug;
+                }
             }
 
             $content = '';
@@ -6414,6 +6418,7 @@ class DownloadController extends Controller
               " . $date_condition_info_incidence . "
               AND reports.is_deleted = 0
               AND reports.active = 1
+              AND teams.is_public = 1
               AND reports.website_id in (" . $websiteIds . ")  
               " . $condition_info_incidence . "
               GROUP BY reports.id      
@@ -6512,7 +6517,8 @@ class DownloadController extends Controller
               sm_calendar_masters.website_id in (" . $websiteIds . ") and                        
               reports.id IS NOT NULL and 
               reports.active = 1 and 
-              reports.for_calendar = 1 and ISNULL(reports.deleted_at)
+              reports.for_calendar = 1 and ISNULL(reports.deleted_at) and
+              (reports.team_id IS NULL OR teams.is_public = 1)
               " . $date_condition_info_sm_cal . "
               " . $condition_info_sm_cal . "  
     
@@ -6554,6 +6560,7 @@ class DownloadController extends Controller
                       documents.active = 1              
                       and documents.is_deleted = 0 and ISNULL(documents.deleted_at) 
                       and documents.website_id in (" . $websiteIds . ")  
+                      and (documents.team_id IS NULL OR teams.is_public = 1)
                       " . $condition_focus_teams . "   
                       " . $condition_info_focus . "                                        
                   ) 
@@ -6751,6 +6758,8 @@ class DownloadController extends Controller
             $paramTeamId = $paramsArr['team_id'];
         }
 
+        $skipTeamReport = !empty($issue) && empty($paramTeamId);
+
         $paramCategoryId = "";
         if (!empty($paramsArr['category_id'])) {
             $paramCategoryId = $paramsArr['category_id'];
@@ -6856,6 +6865,11 @@ class DownloadController extends Controller
             $join->wherenull('modules.deleted_at');
         });
 
+        $data = $data->join('teams', function ($join) {
+            $join->on('reports.team_id', '=', 'teams.id');
+            $join->where('teams.is_public', 1);
+        });
+
         if (!empty($from && $to)) {
             $data = $data->whereBetween($dateRangeAttribute, [$from, $to]);
             $dataAllTeamReport = $dataAllTeamReport->whereBetween($dateRangeAttribute, [$from, $to]);
@@ -6873,6 +6887,11 @@ class DownloadController extends Controller
         if (count($chapter_ids_arr) > 0) {
             $data = $data->wherein('reports.chapter_id', $chapter_ids_arr);
             $dataAllTeamReport = $dataAllTeamReport->wherein('reports.chapter_id', $chapter_ids_arr);
+        }
+
+        if ($skipTeamReport) {
+            $data = $data->whereRaw('1 = 0');
+            $dataAllTeamReport = $dataAllTeamReport->whereRaw('1 = 0');
         }
 
         //////////////////////////////////
@@ -6968,6 +6987,8 @@ class DownloadController extends Controller
             $news = $news->leftjoin('languages', 'reports.language_id', 'languages.id');
             $news = $news->leftjoin('locations', 'reports.location_id', 'locations.id');
             $news = $news->leftjoin('location_states', 'reports.location_state_id', 'location_states.id');
+            $news = $news->join('teams', 'reports.team_id', '=', 'teams.id');
+            $news = $news->where('teams.is_public', 1);
 
             $news = $news->whereIn('team_id', $teamIds);
 
