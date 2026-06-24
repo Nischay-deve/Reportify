@@ -58,7 +58,7 @@ $paginationLinks = $keyNews->links()->render();
 
     <form action="{{ route('report.pdfview', $website_slug) }}" method="get" autocomplete="off" id="find_more_downloadForm"
         target="_blank">
-        <input type="hidden" name="team_name" id="find_more_team_id" value="">
+        <input type="hidden" name="team_name[]" id="find_more_team_id" value="">
         <input type="hidden" name="module[]" id="find_more_module_id" value="">
         <input type="hidden" name="chapter_id[]" id="find_more_chapter_id" value="">
         <input type="hidden" name="find_more" id="find_more" value="yes">
@@ -742,8 +742,7 @@ $paginationLinks = $keyNews->links()->render();
                                                                     @if (empty($find_more))
                                                                     <p style="padding-top:10px;">
                                                                         <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
-                                                                            <a href="javascript:void(0);" onclick="findSimilar({{ $reports['team_id'] }},{{ $reports['module_id'] }},{{ $reports['chapter_id'] }});" style="color:#000;"
-                                                                                target="_blank">
+                                                                            <a href="javascript:void(0);" onclick="findSimilar({{ $reports['team_id'] }},{{ $reports['module_id'] }},{{ $reports['chapter_id'] }}); return false;" style="color:#000;">
                                                                                 <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ $chapterReportData[$reports['chapter_id']] ?? '' }}</span> similar incidents
                                                                                 of
 
@@ -994,6 +993,7 @@ $paginationLinks = $keyNews->links()->render();
         $('#find_more_chapter_id').val(chapter_id);
 
         $("#find_more_downloadForm").submit();
+        return false;
     }
 
     $(document).ready(function() {

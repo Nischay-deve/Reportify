@@ -470,8 +470,7 @@
                                                     @if (empty($find_more) && !empty($item->module_id))
                                                         <p style="padding-top:10px;">
                                                             <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
-                                                                <a href="javascript:void(0);" onclick="findSimilar({{ $item->team_id }},{{ $item->module_id }},{{ $item->chapter_id }});" style="color:#000;"
-                                                                target="_blank">
+                                                                <a href="javascript:void(0);" onclick="findSimilar({{ $item->team_id }},{{ $item->module_id }},{{ $item->chapter_id }}); return false;" style="color:#000;">
                                                                 <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ $item->chapter_id }}</span> similar incidents
                                                             of
 
