@@ -1399,6 +1399,15 @@ class DownloadController extends Controller
 
         $chapterReportData = $this->fetchChapterReportCount();
 
+        $similarIncidentCounts = [];
+        if (!empty($data) && is_array($data)) {
+            foreach ($data as $chapterRow) {
+                if (!empty($chapterRow['chapter_id'])) {
+                    $similarIncidentCounts[$chapterRow['chapter_id']] = (int) ($chapterRow['chapter_count'] ?? 0);
+                }
+            }
+        }
+
         $fromPage = "";
         if ($request->fromPage) {
             $fromPage = $request->fromPage;
@@ -1426,6 +1435,7 @@ class DownloadController extends Controller
             'viewLayout' => $viewLayout,
             'publicReportColor' => $publicReportColor,
             'chapterReportData' => $chapterReportData,
+            'similarIncidentCounts' => $similarIncidentCounts,
             'find_more' => $find_more,
             'module_ids_arr' => $module_ids_arr,
             'team_name' => $request->team_name,
@@ -2897,6 +2907,15 @@ class DownloadController extends Controller
 
         $chapterReportData = $this->fetchChapterReportCount();
 
+        $similarIncidentCounts = [];
+        if (!empty($data) && is_array($data)) {
+            foreach ($data as $chapterRow) {
+                if (!empty($chapterRow['chapter_id'])) {
+                    $similarIncidentCounts[$chapterRow['chapter_id']] = (int) ($chapterRow['chapter_count'] ?? 0);
+                }
+            }
+        }
+
         $fromPage = "";
         $all_issues = "";
         $all_sm_cals = "";
@@ -2967,6 +2986,7 @@ class DownloadController extends Controller
             'viewLayout' => $viewLayout,
             'publicReportColor' => $publicReportColor,
             'chapterReportData' => $chapterReportData,
+            'similarIncidentCounts' => $similarIncidentCounts,
             'find_more' => $find_more,
             // 'otherChapterResults' => $otherChapterResults,
             'module_ids_arr' => $module_ids_arr,
@@ -6205,6 +6225,7 @@ class DownloadController extends Controller
                     'slug' => $slug,
                     'issue' => $issue,
                     'count_sm' => $count_sm,
+                    'chapterReportData' => $this->fetchChapterReportCount(),
                 ];
 
                 $view_sm_content_web =  view('dailymonitoring.sm_index_webview',  $SMParams)->render();

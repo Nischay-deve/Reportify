@@ -471,7 +471,7 @@
                                                         <p style="padding-top:10px;">
                                                             <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
                                                                 <a href="javascript:void(0);" onclick="findSimilar({{ $item->team_id }},{{ $item->module_id }},{{ $item->chapter_id }}); return false;" style="color:#000;">
-                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ $item->chapter_id }}</span> similar incidents
+                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ \App\Helpers\Helper::similarIncidentCount($chapterReportData ?? [], $item->team_id ?? null, $item->module_id ?? null, $item->chapter_id ?? null) }}</span> similar incidents
                                                             of
 
                                                                 @if (!empty($item->module_name))

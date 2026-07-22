@@ -743,7 +743,7 @@ $paginationLinks = $keyNews->links()->render();
                                                                     <p style="padding-top:10px;">
                                                                         <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
                                                                             <a href="javascript:void(0);" onclick="findSimilar({{ $reports['team_id'] }},{{ $reports['module_id'] }},{{ $reports['chapter_id'] }}); return false;" style="color:#000;">
-                                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ $chapterReportData[$reports['chapter_id']] ?? '' }}</span> similar incidents
+                                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ \App\Helpers\Helper::similarIncidentCount($chapterReportData ?? [], $reports['team_id'] ?? null, $reports['module_id'] ?? null, $reports['chapter_id'] ?? null) }}</span> similar incidents
                                                                                 of
 
                                                                                 @if (!empty($reports['module']['name']))

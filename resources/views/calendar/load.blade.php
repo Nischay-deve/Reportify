@@ -345,12 +345,15 @@
                                         <div class="container" style="max-width: 100%;">
                                             <div class="row">                                               
                                                 <div class="col-12 text-left">
-                                                    @if(isset($chapterReportData[$item->chapter_id]))
+                                                    @php
+                                                        $similarCount = \App\Helpers\Helper::similarIncidentCount($chapterReportData ?? [], $item->team_id ?? null, $item->module_id ?? null, $item->chapter_id ?? null);
+                                                    @endphp
+                                                    @if($similarCount !== '')
                                                         <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
                                                             <a href="{{ $viewSimilarReportUrl }}" style="color:#000;"
                                                                 target="_blank">
                                                                 <i class="fas fa-file mr-2 fsicon"></i> 
-                                                                Click here to find <span class="text-info fs-4 fw-bold">{{ $chapterReportData[$item->chapter_id] }}</span> similar incidents
+                                                                Click here to find <span class="text-info fs-4 fw-bold">{{ $similarCount }}</span> similar incidents
                                                                 @if (!empty($item->team_name))
                                                                 of {{ $item->team_name }}
                                                                 @endif
@@ -982,7 +985,7 @@
                                                                         <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
                                                                             <a href="{{ $viewSimilarReportUrl }}" style="color:#000;"
                                                                                 target="_blank">
-                                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ $chapterReportData[$item->report_chapter_id] }}</span> similar incidents
+                                                                                <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ \App\Helpers\Helper::similarIncidentCount($chapterReportData ?? [], $item->report_team_id ?? null, $item->report_module_id ?? null, $item->report_chapter_id ?? null) }}</span> similar incidents
                                                                                 @if (!empty($item->team_name))
                                                                                 of {{ $item->team_name }}
                                                                                 @endif

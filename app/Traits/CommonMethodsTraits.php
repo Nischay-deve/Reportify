@@ -20,20 +20,34 @@ trait CommonMethodsTraits
     public function fetchChapterReportCount()
     {
         ///////////////////////////////////////////
-        //get chapter wise report counts 
+        // Team + module + chapter wise report counts for "find similar" links
         ///////////////////////////////////////////
-        $chapterReports = DB::connection('setfacts')->select("SELECT reports.chapter_id, COUNT(reports.id) AS chapter_reports FROM `reports` 
-        join chapters on chapters.id = reports.chapter_id
-        where reports.active=1 and 
-        reports.deleted_at is null and 
-        chapters.active = 1 and
-        chapters.deleted_at is null 
-        GROUP BY reports.chapter_id");
-        // dd($chapterReports);
+        $chapterReports = DB::connection('setfacts')->select("
+            SELECT
+                reports.team_id,
+                reports.module_id,
+                reports.chapter_id,
+                COUNT(DISTINCT reports.id) AS chapter_reports
+            FROM reports
+            JOIN chapters ON chapters.id = reports.chapter_id
+            JOIN modules ON modules.id = reports.module_id
+            LEFT JOIN teams ON teams.id = reports.team_id
+            WHERE reports.active = 1
+                AND reports.is_deleted = 0
+                AND reports.deleted_at IS NULL
+                AND chapters.active = 1
+                AND chapters.deleted_at IS NULL
+                AND modules.deleted_at IS NULL
+                AND (reports.team_id IS NULL OR teams.is_public = 1)
+            GROUP BY reports.team_id, reports.module_id, reports.chapter_id
+        ");
+
         $chapterReportData = array();
-        foreach ($chapterReports as $key => $chapterReport) {
-            $chapterReportData[$chapterReport->chapter_id] = $chapterReport->chapter_reports;
+        foreach ($chapterReports as $chapterReport) {
+            $compositeKey = $chapterReport->team_id . '_' . $chapterReport->module_id . '_' . $chapterReport->chapter_id;
+            $chapterReportData[$compositeKey] = $chapterReport->chapter_reports;
         }
+
         return $chapterReportData;
     }
 

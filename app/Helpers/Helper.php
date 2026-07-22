@@ -15,6 +15,32 @@ class Helper
         }
     }
 
+    public static function similarIncidentCount($chapterReportData, $teamId, $moduleId, $chapterId, $scopedCounts = [])
+    {
+        if (empty($chapterId)) {
+            return '';
+        }
+
+        // "Find similar" opens all matching historical news (no date filter),
+        // so prefer the all-time team + module + chapter count.
+        if (!empty($teamId) && !empty($moduleId)) {
+            $compositeKey = $teamId . '_' . $moduleId . '_' . $chapterId;
+            if (isset($chapterReportData[$compositeKey])) {
+                return $chapterReportData[$compositeKey];
+            }
+        }
+
+        if (isset($chapterReportData[$chapterId])) {
+            return $chapterReportData[$chapterId];
+        }
+
+        if (!empty($scopedCounts) && isset($scopedCounts[$chapterId])) {
+            return $scopedCounts[$chapterId];
+        }
+
+        return '';
+    }
+
     public static function interpolateQuery($sql, $bindings) {
     foreach ($bindings as $binding) {
         // Escape the binding depending on its type

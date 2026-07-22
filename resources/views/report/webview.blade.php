@@ -574,6 +574,26 @@
                                                                             @endif
                                                                         </div>
 
+                                                                        @if (empty($find_more))
+                                                                            <p style="padding-top:10px;">
+                                                                                <span class="causale" style="margin:10px;color:#000; font-weight: 600; text-align:center;">
+                                                                                    <a href="javascript:void(0);" onclick="findSimilar({{ data_get($reports, 'team_id') }},{{ data_get($reports, 'module_id') }},{{ data_get($reports, 'chapter_id') }}); return false;" style="color:#000;">
+                                                                                        <i class="fas fa-file mr-2 fsicon"></i> Click here to find <span class="text-info fs-4 fw-bold">{{ \App\Helpers\Helper::similarIncidentCount($chapterReportData ?? [], data_get($reports, 'team_id'), data_get($reports, 'module_id'), data_get($reports, 'chapter_id'), $similarIncidentCounts ?? []) }}</span> similar incidents
+                                                                                        of
+
+                                                                                        @if (!empty(data_get($reports, 'module.name')))
+                                                                                            &nbsp;{{ ucfirst(data_get($reports, 'module.name')) }}
+                                                                                        @endif
+
+                                                                                        @if (!empty(data_get($reports, 'chapter.name')))
+                                                                                            &nbsp;->&nbsp;{{ ucfirst(data_get($reports, 'chapter.name')) }}
+                                                                                        @endif
+                                                                                        <i class="fa fa-external-link-square"></i>
+                                                                                    </a>
+                                                                                </span>
+                                                                            </p>
+                                                                        @endif
+
                                                                         @php
                                                                             $seperator = "\r\n \r\n";
                                                                             $keypointDescription = [];
@@ -705,6 +725,7 @@
             $('#find_more_module_id').val(module_id);
             $('#find_more_chapter_id').val(chapter_id);
             $("#find_more_downloadForm").submit();
+            return false;
         }
 
         $(document).ready(function() {
